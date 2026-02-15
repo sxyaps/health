@@ -959,6 +959,12 @@ a {
   flex-direction: column;
   height: calc(100vh - var(--header-height) - var(--nav-height) - var(--space-md) * 2);
   height: calc(100dvh - var(--header-height) - var(--nav-height) - var(--space-md) * 2);
+  position: relative;
+}
+
+/* When keyboard is open, chat takes full available space */
+body.keyboard-open .chat-container {
+  height: calc(var(--vv-height, 100vh) - var(--header-height) - var(--space-md));
 }
 
 .chat-messages {
@@ -1001,12 +1007,38 @@ a {
   gap: var(--space-sm);
   padding: var(--space-sm) 0;
   align-items: flex-end;
+  flex-shrink: 0;
+  background: var(--color-bg);
 }
 
 .chat-input-row input {
   flex: 1;
   border-radius: var(--radius-xl);
   padding: var(--space-sm) var(--space-md);
+}
+
+/* Hide bottom nav when keyboard is open */
+body.keyboard-open #bottom-nav {
+  transform: translateY(100%);
+  pointer-events: none;
+  opacity: 0;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* Adjust content when keyboard open */
+body.keyboard-open #app-content {
+  padding-bottom: 0 !important;
+}
+
+/* Chat screen should not scroll itself, the chat-container handles scrolling */
+#screen-chat {
+  overflow: hidden;
+  padding-bottom: var(--space-sm) !important;
+}
+
+#screen-chat.active {
+  display: flex;
+  flex-direction: column;
 }
 
 .chat-send-btn {

@@ -206,6 +206,9 @@
     /* Apply saved theme immediately to avoid flash */
     applyTheme();
 
+    /* Keyboard detection for iOS — hide nav bar, resize chat */
+    setupKeyboardHandling();
+
     Storage.init().then(function () {
       var lang = Storage.getPref('language', null);
       var onboarded = Storage.getPref('onboarded', false);
@@ -232,6 +235,61 @@
         console.warn('SW registration failed:', err);
       });
     }
+  }
+
+  /**
+   * Detect virtual keyboard open/close on iOS and Android.
+   * Uses the Visual Viewport API to track viewport height changes.
+   * When the keyboard opens, adds a 'keyboard-open' class to body
+   * and sets a CSS custom property --vv-height for layout adjustments.
+   */
+  function setupKeyboardHandling() {
+    if (!window.visualViewport) return;
+
+    var initialHeight = window.innerHeight;
+    var KEYBOARD_THRESHOLD = 150; /* pixels — keyboard is at least this tall */
+
+    function onViewportResize() {
+      var vv = window.visualViewport;
+      var heightDiff = initialHeight - vv.height;
+      var isKeyboard = heightDiff > KEYBOARD_THRESHOLD;
+
+      document.documentElement.style.setProperty('--vv-height', vv.height + 'px');
+
+      if (isKeyboard) {
+        document.body.classList.add('keyboard-open');
+        /* Scroll chat to bottom when keyboard opens */
+        var chatMsgs = document.getElementById('chat-messages');
+        if (chatMsgs) {
+          setTimeout(function () { chatMsgs.scrollTop = chatMsgs.scrollHeight; }, 50);
+        }
+      } else {
+        document.body.classList.remove('keyboard-open');
+      }
+    }
+
+    window.visualViewport.addEventListener('resize', onViewportResize);
+    window.visualViewport.addEventListener('scroll', onViewportResize);
+
+    /* Also handle focus/blur on inputs as a fallback */
+    document.addEventListener('focusin', function (e) {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        /* Small delay to let iOS finish animating keyboard */
+        setTimeout(function () {
+          var chatMsgs = document.getElementById('chat-messages');
+          if (chatMsgs) chatMsgs.scrollTop = chatMsgs.scrollHeight;
+        }, 300);
+      }
+    });
+
+    document.addEventListener('focusout', function () {
+      /* Small delay before removing keyboard-open class */
+      setTimeout(function () {
+        if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+          document.body.classList.remove('keyboard-open');
+        }
+      }, 100);
+    });
   }
 
   /* ========== Onboarding ========== */
@@ -1716,7 +1774,7 @@
 
     /* Input Row */
     html += '<div class="chat-input-row">';
-    html += '<input type="text" id="chat-input" placeholder="' + UI.t('chat_placeholder') + '" autocomplete="off">';
+    html += '<input type="text" id="chat-input" placeholder="' + UI.t('chat_placeholder') + '" autocomplete="off" enterkeyhint="send">';
     html += '<button class="chat-send-btn" id="btn-chat-send" aria-label="' + UI.t('chat_send') + '">' + UI.icon('send') + '</button>';
     html += '</div>';
 
