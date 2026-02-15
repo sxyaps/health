@@ -11,6 +11,52 @@
   var Insights = window.HealthInsights;
   var UI = window.HealthUI;
 
+  /* ========== Haptic Feedback Engine ========== */
+  var Haptic = {
+    /** Check if vibration API is supported */
+    supported: 'vibrate' in navigator,
+
+    /** Light tap - nav buttons, toggles, small interactions */
+    tap: function () {
+      if (this.supported) navigator.vibrate(8);
+    },
+
+    /** Medium tap - selecting a rating, checking a med, sending a message */
+    select: function () {
+      if (this.supported) navigator.vibrate(15);
+    },
+
+    /** Success - saving data, completing a step */
+    success: function () {
+      if (this.supported) navigator.vibrate([20, 40, 20]);
+    },
+
+    /** Achievement unlocked - new badge, level up */
+    achievement: function () {
+      if (this.supported) navigator.vibrate([30, 50, 30, 50, 60]);
+    },
+
+    /** Celebration - check-in complete, streak milestone */
+    celebration: function () {
+      if (this.supported) navigator.vibrate([40, 30, 40, 30, 40, 60, 80]);
+    },
+
+    /** Error / warning - validation fail */
+    error: function () {
+      if (this.supported) navigator.vibrate([80, 40, 80]);
+    },
+
+    /** Breathing exercise pulse - soft rhythmic tick */
+    breathe: function () {
+      if (this.supported) navigator.vibrate(12);
+    },
+
+    /** Streak fire - ascending double pulse */
+    streak: function () {
+      if (this.supported) navigator.vibrate([15, 30, 40]);
+    }
+  };
+
   /* ========== App State ========== */
   var state = {
     currentScreen: 'home',
@@ -93,6 +139,7 @@
    * @param {string} lang - Selected language code
    */
   function selectLanguage(lang) {
+    Haptic.success();
     UI.setLanguage(lang);
     Storage.setPref('language', lang);
     Storage.setPref('onboarded', true);
@@ -132,6 +179,7 @@
     for (var i = 0; i < navBtns.length; i++) {
       navBtns[i].addEventListener('click', function () {
         var screen = this.getAttribute('data-screen');
+        Haptic.tap();
         navigateTo(screen);
       });
     }
@@ -568,6 +616,7 @@
           var medId = this.getAttribute('data-med-toggle');
           var taken = JSON.parse(localStorage.getItem(medsDateKey) || '{}');
           taken[medId] = !taken[medId];
+          Haptic.select();
           localStorage.setItem(medsDateKey, JSON.stringify(taken));
           renderHome();
         });
@@ -617,6 +666,7 @@
               var curMeds = JSON.parse(localStorage.getItem('hp_medications') || '[]');
               curMeds.push({ id: 'med_' + Date.now(), name: name, dose: dose || '-', time: time || '09:00' });
               localStorage.setItem('hp_medications', JSON.stringify(curMeds));
+              Haptic.success();
               UI.showToast(UI.t('meds_added'), 'success');
               renderHome();
             });
@@ -701,6 +751,7 @@
       sleepHours: sleepHours,
       workoutMinutes: workoutMinutes
     }).then(function () {
+      Haptic.success();
       UI.showToast(UI.t('metrics_saved'), 'success');
     });
   }
@@ -771,6 +822,7 @@
 
     if (prevBtn) {
       prevBtn.addEventListener('click', function () {
+        Haptic.tap();
         saveCurrentStepData();
         state.checkinStep--;
         renderCheckinStep();
@@ -780,6 +832,7 @@
     if (nextBtn) {
       nextBtn.addEventListener('click', function () {
         if (validateCurrentStep()) {
+          Haptic.tap();
           saveCurrentStepData();
           state.checkinStep++;
           renderCheckinStep();
@@ -789,6 +842,7 @@
 
     if (submitBtn) {
       submitBtn.addEventListener('click', function () {
+        Haptic.select();
         saveCurrentStepData();
         submitCheckIn();
       });
@@ -819,6 +873,7 @@
         }
         this.classList.add('selected');
         state.checkinData[field] = value;
+        Haptic.select();
       });
     }
   }
@@ -844,6 +899,7 @@
     var step = CHECKIN_STEPS[state.checkinStep];
     if (step.type === 'rating' && !state.checkinData[step.field]) {
       UI.showToast(UI.t(step.questionKey), 'info');
+      Haptic.error();
       return false;
     }
     return true;
@@ -1022,11 +1078,19 @@
     overlay.innerHTML = html;
     document.body.appendChild(overlay);
 
+    /* Haptic celebration burst */
+    if (data.newBadges && data.newBadges.length > 0) {
+      Haptic.achievement();
+    } else {
+      Haptic.celebration();
+    }
+
     /* Launch confetti */
     spawnConfetti();
 
     /* Bind continue button */
     document.getElementById('celebration-continue').addEventListener('click', function () {
+      Haptic.tap();
       overlay.style.opacity = '0';
       overlay.style.transition = 'opacity 0.3s ease';
       setTimeout(function () {
@@ -1372,6 +1436,7 @@
         /* Breathe in 4s */
         text.textContent = UI.t('mind_breathe_in');
         circle.className = 'breathing-circle expand';
+        Haptic.breathe();
         var count = 4;
         timer.textContent = count;
         countInterval = setInterval(function () {
@@ -1385,6 +1450,7 @@
           /* Hold 7s */
           text.textContent = UI.t('mind_hold');
           circle.className = 'breathing-circle hold';
+          Haptic.breathe();
           count = 7;
           timer.textContent = count;
           countInterval = setInterval(function () {
@@ -1398,6 +1464,7 @@
             /* Breathe out 8s */
             text.textContent = UI.t('mind_breathe_out');
             circle.className = 'breathing-circle shrink';
+            Haptic.breathe();
             count = 8;
             timer.textContent = count;
             countInterval = setInterval(function () {
@@ -1468,6 +1535,7 @@
     });
 
     nextBtn.addEventListener('click', function () {
+      Haptic.select();
       currentStep++;
       renderStep();
     });
@@ -1489,6 +1557,7 @@
       entries.push({ date: dateStr, text: text, timestamp: Date.now() });
       localStorage.setItem('hp_journal', JSON.stringify(entries));
       input.value = '';
+      Haptic.success();
       UI.showToast(UI.t('mind_journal_saved'), 'success');
       renderMind();
     });
@@ -1552,6 +1621,7 @@
     var chipBtns = document.querySelectorAll('.chat-chip');
     for (var cb = 0; cb < chipBtns.length; cb++) {
       chipBtns[cb].addEventListener('click', function () {
+        Haptic.tap();
         document.getElementById('chat-input').value = this.getAttribute('data-msg');
         sendChatMessage();
         var suggestionsEl = document.getElementById('chat-suggestions');
@@ -1597,6 +1667,7 @@
    */
   function showBotResponse(messagesEl, typingEl, response) {
     if (typingEl && typingEl.parentNode) typingEl.parentNode.removeChild(typingEl);
+    Haptic.tap();
     state.chatMessages.push({ role: 'bot', text: response });
 
     var botBubble = document.createElement('div');
@@ -1615,6 +1686,8 @@
     var input = document.getElementById('chat-input');
     var text = input.value.trim();
     if (!text) return;
+
+    Haptic.tap();
 
     /* Hide suggestion chips after first message */
     var suggestionsEl = document.getElementById('chat-suggestions');
@@ -2046,6 +2119,7 @@
     var themeOptions = document.querySelectorAll('#theme-row .theme-option');
     for (var ti = 0; ti < themeOptions.length; ti++) {
       themeOptions[ti].addEventListener('click', function () {
+        Haptic.select();
         var newTheme = this.getAttribute('data-theme');
         Storage.setPref('theme', newTheme);
         applyTheme();
@@ -2057,6 +2131,7 @@
     var colorOptions = document.querySelectorAll('#accent-row .color-option');
     for (var co = 0; co < colorOptions.length; co++) {
       colorOptions[co].addEventListener('click', function () {
+        Haptic.select();
         var newAccent = this.getAttribute('data-accent');
         Storage.setPref('accent', newAccent);
         applyTheme();
@@ -2115,6 +2190,7 @@
     showDialog(UI.t('settings_clear_confirm'), function () {
       Storage.clearAll().then(function () {
         state.chatMessages = [];
+        Haptic.error();
         UI.showToast(UI.t('settings_cleared'), 'success');
         navigateTo('home');
       });
