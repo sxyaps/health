@@ -163,8 +163,10 @@ window.HealthUI = (function () {
 
       /* Chat */
       chat_title: 'Chat',
-      chat_placeholder: 'talk to me about anything...',
+      chat_placeholder: 'Message...',
       chat_welcome: "hey, whats up. you can talk to me about whatever - how you're feeling, your mood, sleep, stress, or just vent. i can also pull up your health data if you want. no judgment",
+      chat_welcome_title: 'HealthPulse Chat',
+      chat_welcome_subtitle: 'Ask me anything about your health, mood, sleep, or just talk. I have access to your data and can help.',
       chat_send: 'Send',
 
       /* Reports */
@@ -493,8 +495,10 @@ window.HealthUI = (function () {
 
       /* Chat */
       chat_title: 'Chat',
-      chat_placeholder: 'praat met me over alles...',
+      chat_placeholder: 'Bericht...',
       chat_welcome: 'hey, hoe is ie. je kan met me praten over alles - hoe je je voelt, mood, slaap, stress, of gewoon even ventileren. kan ook je gezondheidsdata erbij pakken als je wilt. zero oordeel',
+      chat_welcome_title: 'HealthPulse Chat',
+      chat_welcome_subtitle: 'Vraag me alles over je gezondheid, mood, slaap, of praat gewoon. Ik heb toegang tot je data en kan helpen.',
       chat_send: 'Verstuur',
 
       /* Reports */

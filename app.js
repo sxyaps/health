@@ -1743,37 +1743,40 @@
 
   function renderChat() {
     var container = document.getElementById('screen-chat');
-
-    /* Initialize with welcome message if empty */
-    if (state.chatMessages.length === 0) {
-      state.chatMessages.push({
-        role: 'bot',
-        text: UI.t('chat_welcome')
-      });
-    }
+    var hasMessages = state.chatMessages.length > 0;
 
     var html = '<div class="chat-container">';
 
     /* Messages Area */
     html += '<div class="chat-messages" id="chat-messages">';
-    for (var i = 0; i < state.chatMessages.length; i++) {
-      var msg = state.chatMessages[i];
-      html += '<div class="chat-bubble ' + msg.role + '">' + escapeHtml(msg.text) + '</div>';
+
+    if (!hasMessages) {
+      /* Welcome state — centered like ChatGPT */
+      html += '<div class="chat-welcome">';
+      html += '<div class="chat-welcome-icon">💬</div>';
+      html += '<div class="chat-welcome-title">' + UI.t('chat_welcome_title') + '</div>';
+      html += '<div class="chat-welcome-subtitle">' + UI.t('chat_welcome_subtitle') + '</div>';
+      html += '</div>';
+    } else {
+      for (var i = 0; i < state.chatMessages.length; i++) {
+        var msg = state.chatMessages[i];
+        html += buildChatMsgRow(msg.role, msg.text);
+      }
     }
     html += '</div>';
 
-    /* Quick suggestion chips */
-    html += '<div class="chat-suggestions" id="chat-suggestions">';
+    /* Suggestion chips — shown in welcome & above input */
     var chips = UI.getLang() === 'nl'
       ? ['hoe gaat het met me?', 'ik voel me stressed', 'slaaptips', 'ik voel me verdrietig']
       : ['how am i doing?', 'i feel stressed', 'sleep tips', 'i feel sad'];
+    html += '<div class="chat-suggestions" id="chat-suggestions">';
     for (var ch = 0; ch < chips.length; ch++) {
       html += '<button class="chat-chip" data-msg="' + escapeHtml(chips[ch]) + '">' + escapeHtml(chips[ch]) + '</button>';
     }
     html += '</div>';
 
-    /* Input Row */
-    html += '<div class="chat-input-row">';
+    /* Input bar — ChatGPT-style */
+    html += '<div class="chat-input-bar">';
     html += '<input type="text" id="chat-input" placeholder="' + UI.t('chat_placeholder') + '" autocomplete="off" enterkeyhint="send">';
     html += '<button class="chat-send-btn" id="btn-chat-send" aria-label="' + UI.t('chat_send') + '">' + UI.icon('send') + '</button>';
     html += '</div>';
@@ -1786,10 +1789,20 @@
     messagesEl.scrollTop = messagesEl.scrollHeight;
 
     /* Bind events */
-    document.getElementById('btn-chat-send').addEventListener('click', sendChatMessage);
-    document.getElementById('chat-input').addEventListener('keypress', function (e) {
-      if (e.key === 'Enter') {
-        sendChatMessage();
+    var sendBtn = document.getElementById('btn-chat-send');
+    var chatInput = document.getElementById('chat-input');
+
+    sendBtn.addEventListener('click', sendChatMessage);
+    chatInput.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') sendChatMessage();
+    });
+
+    /* Activate send button when typing */
+    chatInput.addEventListener('input', function () {
+      if (this.value.trim()) {
+        sendBtn.classList.add('active');
+      } else {
+        sendBtn.classList.remove('active');
       }
     });
 
@@ -1804,6 +1817,24 @@
         if (suggestionsEl) suggestionsEl.classList.add('hidden');
       });
     }
+  }
+
+  /**
+   * Build HTML for a single chat message row.
+   * @param {string} role - 'bot' or 'user'
+   * @param {string} text - Message text
+   * @returns {string} HTML string
+   */
+  function buildChatMsgRow(role, text) {
+    var html = '<div class="chat-msg-row ' + role + '">';
+    if (role === 'bot') {
+      html += '<div class="chat-avatar"><span class="chat-avatar-emoji">✦</span></div>';
+      html += '<div class="chat-msg-content">' + escapeHtml(text) + '</div>';
+    } else {
+      html += '<div class="chat-msg-content">' + escapeHtml(text) + '</div>';
+    }
+    html += '</div>';
+    return html;
   }
 
   /**
@@ -1846,11 +1877,9 @@
     Haptic.tap();
     state.chatMessages.push({ role: 'bot', text: response });
 
-    var botBubble = document.createElement('div');
-    botBubble.className = 'chat-bubble bot';
-    botBubble.textContent = response;
-    botBubble.style.whiteSpace = 'pre-line';
-    messagesEl.appendChild(botBubble);
+    var tmp = document.createElement('div');
+    tmp.innerHTML = buildChatMsgRow('bot', response);
+    messagesEl.appendChild(tmp.firstChild);
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }
 
@@ -1873,18 +1902,25 @@
     state.chatMessages.push({ role: 'user', text: text });
     input.value = '';
 
-    /* Show user bubble immediately */
+    /* Remove welcome state if present */
+    var welcomeEl = document.querySelector('.chat-welcome');
+    if (welcomeEl) welcomeEl.remove();
+
+    /* Deactivate send button */
+    document.getElementById('btn-chat-send').classList.remove('active');
+
+    /* Show user message immediately */
     var messagesEl = document.getElementById('chat-messages');
-    var userBubble = document.createElement('div');
-    userBubble.className = 'chat-bubble user';
-    userBubble.textContent = text;
-    messagesEl.appendChild(userBubble);
+    var tmp = document.createElement('div');
+    tmp.innerHTML = buildChatMsgRow('user', text);
+    messagesEl.appendChild(tmp.firstChild);
     messagesEl.scrollTop = messagesEl.scrollHeight;
 
     /* Show typing indicator */
     var typingEl = document.createElement('div');
-    typingEl.className = 'chat-bubble bot chat-typing';
-    typingEl.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
+    typingEl.className = 'chat-typing-row';
+    typingEl.innerHTML = '<div class="chat-avatar"><span class="chat-avatar-emoji">✦</span></div>' +
+      '<div class="chat-typing-dots"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>';
     messagesEl.appendChild(typingEl);
     messagesEl.scrollTop = messagesEl.scrollHeight;
 
