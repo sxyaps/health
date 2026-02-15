@@ -1107,14 +1107,7 @@ body.keyboard-open #screen-chat.active {
   border-top: 1px solid var(--color-divider);
 }
 
-/* Hide inputs in non-active screens so iOS doesn't show form navigation */
-.screen:not(.active) input,
-.screen:not(.active) textarea,
-.screen:not(.active) select {
-  visibility: hidden !important;
-  position: absolute !important;
-  pointer-events: none !important;
-}
+/* No extra rules needed — iOS form nav handled via JS disabled attribute */
 
 .chat-input-bar input {
   flex: 1;

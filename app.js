@@ -244,15 +244,10 @@
    * and sets a CSS custom property --vv-height for layout adjustments.
    */
   function setupKeyboardHandling() {
-    var lastKeyboardState = false;
-
     function setKeyboardOpen(open) {
-      if (open === lastKeyboardState) return;
-      lastKeyboardState = open;
-
-      if (open) {
+      /* Only add keyboard-open when on chat screen */
+      if (open && state.currentScreen === 'chat') {
         document.body.classList.add('keyboard-open');
-        /* Scroll chat messages to bottom */
         setTimeout(function () {
           var chatMsgs = document.getElementById('chat-messages');
           if (chatMsgs) chatMsgs.scrollTop = chatMsgs.scrollHeight;
@@ -262,7 +257,6 @@
       }
     }
 
-    /* Primary: Visual Viewport API (best on iOS) */
     if (window.visualViewport) {
       var stableHeight = window.visualViewport.height;
 
@@ -270,19 +264,16 @@
         var vv = window.visualViewport;
         document.documentElement.style.setProperty('--vv-height', vv.height + 'px');
 
-        /* If viewport shrank by > 150px, keyboard is likely open */
         var diff = stableHeight - vv.height;
         if (diff > 150) {
           setKeyboardOpen(true);
         } else {
           setKeyboardOpen(false);
-          /* Update stable height when keyboard closes (handles rotation) */
           stableHeight = vv.height;
         }
       });
     }
 
-    /* Fallback: focus/blur detection */
     document.addEventListener('focusin', function (e) {
       var tag = e.target.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') {
@@ -406,12 +397,24 @@
       document.body.classList.add('chat-active');
       document.documentElement.classList.add('chat-active-html');
     } else {
+      /* Blur any focused input first to dismiss keyboard */
+      if (document.activeElement && document.activeElement.blur) {
+        document.activeElement.blur();
+      }
       document.body.classList.remove('chat-active');
       document.body.classList.remove('keyboard-open');
       document.documentElement.classList.remove('chat-active-html');
-      /* Blur any focused input to dismiss keyboard */
-      if (document.activeElement && document.activeElement.blur) {
-        document.activeElement.blur();
+      /* Force nav bar back to visible */
+      var nav = document.getElementById('bottom-nav');
+      if (nav) {
+        nav.style.transform = 'translateY(0)';
+        nav.style.opacity = '1';
+        nav.style.pointerEvents = '';
+        /* Clear inline styles after transition so CSS takes over again */
+        setTimeout(function () {
+          nav.style.transform = '';
+          nav.style.opacity = '';
+        }, 300);
       }
     }
 
@@ -427,6 +430,19 @@
 
     if (renderers[screenId]) {
       renderers[screenId]();
+    }
+
+    /*
+     * iOS shows a form navigation bar (< > arrows) above the keyboard when
+     * multiple inputs exist on the page. Clear all non-active screen content
+     * so iOS only sees inputs from the current screen.
+     */
+    var allScreens = document.querySelectorAll('.screen');
+    for (var si = 0; si < allScreens.length; si++) {
+      var scr = allScreens[si];
+      if (!scr.classList.contains('active') && scr.id !== 'screen-onboarding') {
+        scr.innerHTML = '';
+      }
     }
   }
 

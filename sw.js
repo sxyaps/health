@@ -5,7 +5,7 @@
  */
 
 /** Cache version identifier — increment on each deployment */
-var CACHE_NAME = 'healthpulse-v20';
+var CACHE_NAME = 'healthpulse-v21';
 
 /** List of all app assets to pre-cache */
 var ASSETS = [
