@@ -950,22 +950,37 @@ a {
 
 /* ========== Chat Interface (ChatGPT-style) ========== */
 
-/* Chat screen — full bleed, no extra padding */
+/*
+ * When chat is active, lock the outer scroll container (#app-content)
+ * so only the chat's own message area scrolls. This prevents the
+ * double-scroll / rubber-band issue on iOS.
+ */
+body.chat-active #app-content {
+  overflow: hidden !important;
+  height: calc(100vh - var(--header-height) - var(--nav-height) - env(safe-area-inset-top, 0px));
+  height: calc(100dvh - var(--header-height) - var(--nav-height) - env(safe-area-inset-top, 0px));
+  padding-bottom: 0 !important;
+  display: flex;
+  flex-direction: column;
+}
+
+body.chat-active.keyboard-open #app-content {
+  height: calc(var(--vv-height, 100dvh) - var(--header-height) - env(safe-area-inset-top, 0px));
+}
+
+/* Chat screen — full bleed, fills parent */
 #screen-chat {
   overflow: hidden !important;
   padding: 0 !important;
   margin: 0;
+  max-width: none !important;
 }
 
 #screen-chat.active {
   display: flex !important;
   flex-direction: column;
-  height: calc(100vh - var(--header-height) - var(--nav-height));
-  height: calc(100dvh - var(--header-height) - var(--nav-height));
-}
-
-body.keyboard-open #screen-chat.active {
-  height: calc(var(--vv-height, 100dvh) - var(--header-height));
+  flex: 1;
+  min-height: 0;
 }
 
 .chat-container {
@@ -973,19 +988,18 @@ body.keyboard-open #screen-chat.active {
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  position: relative;
 }
 
-/* Messages area */
+/* Messages area — the ONLY scrollable element on the chat screen */
 .chat-messages {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: var(--space-sm) 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
   -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
 }
 
 /* Message row — full width, alternating style */
@@ -1214,9 +1228,26 @@ body.keyboard-open #bottom-nav {
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
-/* Adjust content when keyboard open */
+/* Also hide nav when keyboard closes but still on chat (iOS transition) */
 body.keyboard-open #app-content {
   padding-bottom: 0 !important;
+}
+
+/* Prevent any bounce/overscroll on the page when in chat */
+body.chat-active {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body.chat-active #app-shell {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+html.chat-active-html {
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 /* Dark mode overrides for chat */

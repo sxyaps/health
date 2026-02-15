@@ -244,51 +244,62 @@
    * and sets a CSS custom property --vv-height for layout adjustments.
    */
   function setupKeyboardHandling() {
-    if (!window.visualViewport) return;
+    var lastKeyboardState = false;
 
-    var initialHeight = window.innerHeight;
-    var KEYBOARD_THRESHOLD = 150; /* pixels — keyboard is at least this tall */
+    function setKeyboardOpen(open) {
+      if (open === lastKeyboardState) return;
+      lastKeyboardState = open;
 
-    function onViewportResize() {
-      var vv = window.visualViewport;
-      var heightDiff = initialHeight - vv.height;
-      var isKeyboard = heightDiff > KEYBOARD_THRESHOLD;
-
-      document.documentElement.style.setProperty('--vv-height', vv.height + 'px');
-
-      if (isKeyboard) {
+      if (open) {
         document.body.classList.add('keyboard-open');
-        /* Scroll chat to bottom when keyboard opens */
-        var chatMsgs = document.getElementById('chat-messages');
-        if (chatMsgs) {
-          setTimeout(function () { chatMsgs.scrollTop = chatMsgs.scrollHeight; }, 50);
-        }
+        /* Scroll chat messages to bottom */
+        setTimeout(function () {
+          var chatMsgs = document.getElementById('chat-messages');
+          if (chatMsgs) chatMsgs.scrollTop = chatMsgs.scrollHeight;
+        }, 80);
       } else {
         document.body.classList.remove('keyboard-open');
       }
     }
 
-    window.visualViewport.addEventListener('resize', onViewportResize);
-    window.visualViewport.addEventListener('scroll', onViewportResize);
+    /* Primary: Visual Viewport API (best on iOS) */
+    if (window.visualViewport) {
+      var stableHeight = window.visualViewport.height;
 
-    /* Also handle focus/blur on inputs as a fallback */
+      window.visualViewport.addEventListener('resize', function () {
+        var vv = window.visualViewport;
+        document.documentElement.style.setProperty('--vv-height', vv.height + 'px');
+
+        /* If viewport shrank by > 150px, keyboard is likely open */
+        var diff = stableHeight - vv.height;
+        if (diff > 150) {
+          setKeyboardOpen(true);
+        } else {
+          setKeyboardOpen(false);
+          /* Update stable height when keyboard closes (handles rotation) */
+          stableHeight = vv.height;
+        }
+      });
+    }
+
+    /* Fallback: focus/blur detection */
     document.addEventListener('focusin', function (e) {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-        /* Small delay to let iOS finish animating keyboard */
+      var tag = e.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') {
         setTimeout(function () {
           var chatMsgs = document.getElementById('chat-messages');
           if (chatMsgs) chatMsgs.scrollTop = chatMsgs.scrollHeight;
-        }, 300);
+        }, 350);
       }
     });
 
     document.addEventListener('focusout', function () {
-      /* Small delay before removing keyboard-open class */
       setTimeout(function () {
-        if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-          document.body.classList.remove('keyboard-open');
+        var tag = document.activeElement ? document.activeElement.tagName : '';
+        if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
+          setKeyboardOpen(false);
         }
-      }, 100);
+      }, 150);
     });
   }
 
@@ -389,6 +400,15 @@
   function navigateTo(screenId) {
     state.currentScreen = screenId;
     UI.showScreen(screenId);
+
+    /* Lock outer scroll when on chat screen, unlock for everything else */
+    if (screenId === 'chat') {
+      document.body.classList.add('chat-active');
+      document.documentElement.classList.add('chat-active-html');
+    } else {
+      document.body.classList.remove('chat-active');
+      document.documentElement.classList.remove('chat-active-html');
+    }
 
     var renderers = {
       home: renderHome,
