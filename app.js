@@ -181,8 +181,7 @@
     checkinData: {},
     chatMessages: [],
     reminderInterval: null,
-    petSpeechTimer: null,
-    chatInputValue: ''  /* Value from iframe input (avoids iOS form bar) */
+    petSpeechTimer: null
   };
 
   /** Check-in steps configuration */
@@ -242,31 +241,8 @@
    * Measure and set the chat screen height using a CSS custom property.
    * Called on init, on navigate to chat, and on viewport resize (keyboard).
    */
-  /**
-   * When keyboard opens (viewport shrinks), set chat screen height so input stays visible.
-   * Only touches the chat screen element — never nav or body.
-   */
   function setupKeyboardHandling() {
-    if (!window.visualViewport) return;
-    var fullHeight = window.visualViewport.height;
-
-    window.visualViewport.addEventListener('resize', function () {
-      if (state.currentScreen !== 'chat') return;
-      var chatScreen = document.getElementById('screen-chat');
-      if (!chatScreen) return;
-      var vv = window.visualViewport.height;
-      var keyboardOpen = fullHeight - vv > 150;
-      if (keyboardOpen) {
-        var headerEl = document.getElementById('app-header');
-        var navEl = document.getElementById('bottom-nav');
-        var headerPx = headerEl ? headerEl.offsetHeight : 56;
-        var navPx = navEl ? navEl.offsetHeight : 64;
-        chatScreen.style.height = (vv - headerPx - navPx) + 'px';
-      } else {
-        chatScreen.style.height = '';
-        fullHeight = vv;
-      }
-    });
+    /* No JS that touches layout — prevents jumps */
   }
 
   /* ========== Onboarding ========== */
@@ -1723,28 +1699,6 @@
 
   /* ========== Chat Screen ========== */
 
-  /**
-   * Minimal HTML for the chat input iframe. iOS does not show the form
-   * navigation bar (< > arrows) for content in a separate document.
-   * @param {string} placeholder - Placeholder text
-   * @returns {string} Full HTML document string
-   */
-  function getChatInputIframeHTML(placeholder) {
-    var ph = (placeholder || 'Message...').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
-      '<style>*{box-sizing:border-box}body{margin:0;padding:0;min-height:100%;font:15px system-ui,sans-serif}' +
-      '#in{min-height:44px;padding:10px 16px;outline:0;word-wrap:break-word;max-height:100px;overflow-y:auto}' +
-      '#in:empty::before{content:attr(data-ph);color:#888}</style></head><body>' +
-      '<div id="in" contenteditable="true" data-ph="' + ph + '" role="textbox"></div>' +
-      '<script>var el=document.getElementById("in");function sendVal(){try{window.parent.postMessage({type:"chatInput",value:el.textContent.trim()},"*")}catch(e){}}' +
-      'function submit(){var v=el.textContent.trim();if(v){window.parent.postMessage({type:"chatSubmit",value:v},"*");el.textContent="";sendVal();}}' +
-      'el.addEventListener("input",sendVal);' +
-      'el.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();submit();}});' +
-      'window.addEventListener("message",function(e){var d=e.data;if(d.type==="chatClear"){el.textContent="";sendVal();}' +
-      'else if(d.type==="chatSet"){el.textContent=d.value||"";sendVal();}' +
-      'else if(d.type==="chatBlur"){el.blur();}});</script></body></html>';
-  }
-
   function renderChat() {
     var container = document.getElementById('screen-chat');
     var hasMessages = state.chatMessages.length > 0;
@@ -1779,66 +1733,38 @@
     }
     html += '</div>';
 
-    /* Input bar — iframe input so iOS does not show form navigation bar */
+    /* Input bar */
     html += '<div class="chat-input-bar">';
-    html += '<div class="chat-input-wrap">';
-    html += '<iframe id="chat-input-iframe" class="chat-input-iframe" title="' + escapeHtml(UI.t('chat_placeholder')) + '"></iframe>';
-    html += '</div>';
+    html += '<input type="text" id="chat-input" class="chat-input" placeholder="' + UI.t('chat_placeholder') + '" autocomplete="off" enterkeyhint="send">';
     html += '<button class="chat-send-btn" id="btn-chat-send" aria-label="' + UI.t('chat_send') + '">' + UI.icon('send') + '</button>';
     html += '</div>';
 
     html += '</div>';
     container.innerHTML = html;
 
-    /* Load iframe content (separate document = no iOS form bar) */
-    state.chatInputValue = '';
-    var iframe = document.getElementById('chat-input-iframe');
-    if (iframe) {
-      iframe.srcdoc = getChatInputIframeHTML(UI.t('chat_placeholder'));
-    }
-
-    /* Scroll to bottom */
     var messagesEl = document.getElementById('chat-messages');
     messagesEl.scrollTop = messagesEl.scrollHeight;
 
     var sendBtn = document.getElementById('btn-chat-send');
-
-    /* One listener per chat render; remove previous so we don't duplicate */
-    if (state.chatInputMessageHandler) {
-      window.removeEventListener('message', state.chatInputMessageHandler);
-    }
-    function onChatIframeMessage(e) {
-      if (!e.data) return;
-      if (e.data.type === 'chatInput') {
-        state.chatInputValue = e.data.value || '';
-        sendBtn.classList.toggle('active', !!state.chatInputValue);
-      } else if (e.data.type === 'chatSubmit') {
-        state.chatInputValue = e.data.value || '';
-        if (state.chatInputValue) sendChatMessage();
-      }
-    }
-    state.chatInputMessageHandler = onChatIframeMessage;
-    window.addEventListener('message', onChatIframeMessage);
+    var chatInput = document.getElementById('chat-input');
 
     sendBtn.addEventListener('click', sendChatMessage);
+    chatInput.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') sendChatMessage();
+    });
+    chatInput.addEventListener('input', function () {
+      sendBtn.classList.toggle('active', !!this.value.trim());
+    });
 
-    /* Dismiss keyboard when scrolling messages */
     messagesEl.addEventListener('touchmove', function () {
-      if (iframe && iframe.contentWindow) {
-        iframe.contentWindow.postMessage({ type: 'chatBlur' }, '*');
-      }
+      if (document.activeElement === chatInput) chatInput.blur();
     }, { passive: true });
 
-    /* Suggestion chips: set value in iframe and send */
     var chipBtns = document.querySelectorAll('.chat-chip');
     for (var cb = 0; cb < chipBtns.length; cb++) {
       chipBtns[cb].addEventListener('click', function (e) {
         Haptic.tap(e);
-        var msg = this.getAttribute('data-msg');
-        state.chatInputValue = msg;
-        if (iframe && iframe.contentWindow) {
-          iframe.contentWindow.postMessage({ type: 'chatSet', value: msg }, '*');
-        }
+        chatInput.value = this.getAttribute('data-msg');
         sendChatMessage();
         var suggestionsEl = document.getElementById('chat-suggestions');
         if (suggestionsEl) suggestionsEl.classList.add('hidden');
@@ -1915,23 +1841,17 @@
    * Tries OpenAI API first, falls back to rule-based if unavailable.
    */
   function sendChatMessage() {
-    var text = (state.chatInputValue || '').trim();
+    var input = document.getElementById('chat-input');
+    var text = (input && input.value) ? input.value.trim() : '';
     if (!text) return;
 
     Haptic.tap();
-
-    state.chatInputValue = '';
-    var iframe = document.getElementById('chat-input-iframe');
-    if (iframe && iframe.contentWindow) {
-      iframe.contentWindow.postMessage({ type: 'chatClear' }, '*');
-    }
+    if (input) input.value = '';
     document.getElementById('btn-chat-send').classList.remove('active');
 
-    /* Hide suggestion chips after first message */
     var suggestionsEl = document.getElementById('chat-suggestions');
     if (suggestionsEl) suggestionsEl.classList.add('hidden');
 
-    /* Add user message */
     state.chatMessages.push({ role: 'user', text: text });
 
     /* Remove welcome state if present */

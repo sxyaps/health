@@ -961,12 +961,8 @@ a {
 #screen-chat.active {
   display: flex !important;
   flex-direction: column;
-  /* Exact height so nothing scrolls behind nav; no JS so nav never affected */
-  height: calc(
-    100dvh
-    - (var(--header-height) + env(safe-area-inset-top, 0px))
-    - (var(--nav-height) + env(safe-area-inset-bottom, 0px))
-  );
+  height: 100%;
+  min-height: 0;
 }
 
 .chat-container {
@@ -1087,25 +1083,25 @@ a {
 
 /* No extra rules needed — iOS form nav handled via JS disabled attribute */
 
-.chat-input-wrap {
+.chat-input {
   flex: 1;
   min-width: 0;
-}
-
-.chat-input-iframe {
-  display: block;
-  width: 100%;
-  height: 44px;
-  min-height: 44px;
   border: 1.5px solid var(--color-divider);
   border-radius: 22px;
+  padding: 10px 16px;
+  font-size: 15px;
   background: var(--color-surface);
   color: var(--color-text);
+  outline: none;
   transition: border-color 0.15s ease;
 }
 
-.chat-input-iframe:focus-within {
+.chat-input:focus {
   border-color: var(--color-primary);
+}
+
+.chat-input::placeholder {
+  color: var(--color-text-muted);
 }
 
 .chat-send-btn {
@@ -1212,9 +1208,10 @@ a {
   border-top-color: #252525;
 }
 
-[data-theme="dark"] .chat-input-iframe {
+[data-theme="dark"] .chat-input {
   background: #252525;
   border-color: #333;
+  color: #e4e4e4;
 }
 
 [data-theme="dark"] .chat-chip {
