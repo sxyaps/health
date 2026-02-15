@@ -1797,7 +1797,7 @@
 
     /* Input bar — ChatGPT-style */
     html += '<div class="chat-input-bar">';
-    html += '<input type="text" id="chat-input" placeholder="' + UI.t('chat_placeholder') + '" autocomplete="off" enterkeyhint="send">';
+    html += '<input type="text" id="chat-input" placeholder="' + UI.t('chat_placeholder') + '" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send">';
     html += '<button class="chat-send-btn" id="btn-chat-send" aria-label="' + UI.t('chat_send') + '">' + UI.icon('send') + '</button>';
     html += '</div>';
 
