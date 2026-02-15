@@ -11,49 +11,166 @@
   var Insights = window.HealthInsights;
   var UI = window.HealthUI;
 
-  /* ========== Haptic Feedback Engine ========== */
+  /* ========== Feedback Engine (Sound + Vibration + Visual) ========== */
+
+  /** Web Audio context - created lazily on first user gesture */
+  var _audioCtx = null;
+  function getAudioCtx() {
+    if (!_audioCtx) {
+      _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (_audioCtx.state === 'suspended') _audioCtx.resume();
+    return _audioCtx;
+  }
+
+  /** Master volume for feedback sounds (0-1) */
+  var FEEDBACK_VOLUME = 0.15;
+
+  /**
+   * Play a synthesized tone.
+   * @param {number} freq - Frequency in Hz
+   * @param {number} duration - Duration in seconds
+   * @param {string} type - Oscillator type: sine, square, triangle, sawtooth
+   * @param {number} [vol] - Volume 0-1
+   * @param {number} [delay] - Delay before playing in seconds
+   */
+  function playTone(freq, duration, type, vol, delay) {
+    if (Storage.getPref('sounds', true) === false) return;
+    try {
+      var ctx = getAudioCtx();
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.value = freq;
+      gain.gain.value = 0;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      var startTime = ctx.currentTime + (delay || 0);
+      /* Smooth attack and release to avoid clicks */
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime((vol || FEEDBACK_VOLUME), startTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.01);
+    } catch (e) { /* Audio not available */ }
+  }
+
+  /**
+   * Spawn a ripple effect on an element.
+   * @param {Event|Element} evtOrEl - Click event or element
+   */
+  function spawnRipple(evtOrEl) {
+    var el = evtOrEl.currentTarget || evtOrEl.target || evtOrEl;
+    if (!el || !el.getBoundingClientRect) return;
+    var rect = el.getBoundingClientRect();
+    var ripple = document.createElement('span');
+    ripple.className = 'fb-ripple';
+    var size = Math.max(rect.width, rect.height) * 2;
+    ripple.style.width = ripple.style.height = size + 'px';
+    if (evtOrEl.clientX) {
+      ripple.style.left = (evtOrEl.clientX - rect.left - size / 2) + 'px';
+      ripple.style.top = (evtOrEl.clientY - rect.top - size / 2) + 'px';
+    } else {
+      ripple.style.left = (rect.width / 2 - size / 2) + 'px';
+      ripple.style.top = (rect.height / 2 - size / 2) + 'px';
+    }
+    el.style.position = el.style.position || 'relative';
+    el.style.overflow = 'hidden';
+    el.appendChild(ripple);
+    setTimeout(function () { ripple.remove(); }, 500);
+  }
+
+  /**
+   * Bounce-scale an element.
+   * @param {Element} el - The element to bounce
+   * @param {string} [intensity] - 'sm', 'md', 'lg'
+   */
+  function bounceEl(el, intensity) {
+    if (!el) return;
+    var cls = 'fb-bounce-' + (intensity || 'sm');
+    el.classList.add(cls);
+    setTimeout(function () { el.classList.remove(cls); }, 400);
+  }
+
+  /**
+   * Flash-pulse an element with a glow.
+   * @param {Element} el - The element to pulse
+   */
+  function pulseEl(el) {
+    if (!el) return;
+    el.classList.add('fb-pulse');
+    setTimeout(function () { el.classList.remove('fb-pulse'); }, 600);
+  }
+
+  /** Combined Haptic feedback object — each method triggers vibration + sound + visual */
   var Haptic = {
-    /** Check if vibration API is supported */
     supported: 'vibrate' in navigator,
 
-    /** Light tap - nav buttons, toggles, small interactions */
-    tap: function () {
+    /** Light tap — nav, small buttons */
+    tap: function (evt) {
       if (this.supported) navigator.vibrate(8);
+      playTone(800, 0.06, 'sine', 0.08);
+      if (evt) spawnRipple(evt);
     },
 
-    /** Medium tap - selecting a rating, checking a med, sending a message */
-    select: function () {
+    /** Medium tap — rating, checkbox, color pick */
+    select: function (evt) {
       if (this.supported) navigator.vibrate(15);
+      playTone(900, 0.05, 'sine', 0.1);
+      playTone(1200, 0.06, 'sine', 0.1, 0.04);
+      if (evt) spawnRipple(evt);
     },
 
-    /** Success - saving data, completing a step */
-    success: function () {
+    /** Success — save, complete */
+    success: function (el) {
       if (this.supported) navigator.vibrate([20, 40, 20]);
+      playTone(660, 0.1, 'sine', 0.12);
+      playTone(880, 0.15, 'sine', 0.14, 0.1);
+      playTone(1100, 0.12, 'sine', 0.1, 0.22);
+      if (el) bounceEl(el, 'md');
     },
 
-    /** Achievement unlocked - new badge, level up */
+    /** Achievement — badge unlocked */
     achievement: function () {
       if (this.supported) navigator.vibrate([30, 50, 30, 50, 60]);
+      playTone(523, 0.12, 'triangle', 0.14);
+      playTone(659, 0.12, 'triangle', 0.14, 0.12);
+      playTone(784, 0.12, 'triangle', 0.14, 0.24);
+      playTone(1047, 0.25, 'triangle', 0.18, 0.36);
     },
 
-    /** Celebration - check-in complete, streak milestone */
+    /** Celebration — check-in done, confetti */
     celebration: function () {
       if (this.supported) navigator.vibrate([40, 30, 40, 30, 40, 60, 80]);
+      playTone(523, 0.1, 'triangle', 0.12);
+      playTone(659, 0.1, 'triangle', 0.12, 0.08);
+      playTone(784, 0.1, 'triangle', 0.12, 0.16);
+      playTone(1047, 0.1, 'triangle', 0.14, 0.24);
+      playTone(1319, 0.3, 'sine', 0.16, 0.34);
     },
 
-    /** Error / warning - validation fail */
-    error: function () {
+    /** Error — validation fail */
+    error: function (el) {
       if (this.supported) navigator.vibrate([80, 40, 80]);
+      playTone(200, 0.15, 'square', 0.08);
+      playTone(150, 0.2, 'square', 0.06, 0.12);
+      if (el) {
+        el.classList.add('fb-shake');
+        setTimeout(function () { el.classList.remove('fb-shake'); }, 500);
+      }
     },
 
-    /** Breathing exercise pulse - soft rhythmic tick */
+    /** Breathing exercise phase transition */
     breathe: function () {
       if (this.supported) navigator.vibrate(12);
+      playTone(440, 0.3, 'sine', 0.06);
     },
 
-    /** Streak fire - ascending double pulse */
+    /** Streak milestone */
     streak: function () {
       if (this.supported) navigator.vibrate([15, 30, 40]);
+      playTone(600, 0.08, 'sine', 0.1);
+      playTone(900, 0.12, 'sine', 0.12, 0.08);
     }
   };
 
@@ -177,9 +294,9 @@
 
     var navBtns = document.querySelectorAll('#bottom-nav button');
     for (var i = 0; i < navBtns.length; i++) {
-      navBtns[i].addEventListener('click', function () {
+      navBtns[i].addEventListener('click', function (e) {
         var screen = this.getAttribute('data-screen');
-        Haptic.tap();
+        Haptic.tap(e);
         navigateTo(screen);
       });
     }
@@ -612,11 +729,11 @@
       /* Meds checkboxes */
       var medChecks = document.querySelectorAll('[data-med-toggle]');
       for (var mc = 0; mc < medChecks.length; mc++) {
-        medChecks[mc].addEventListener('click', function () {
+        medChecks[mc].addEventListener('click', function (e) {
           var medId = this.getAttribute('data-med-toggle');
           var taken = JSON.parse(localStorage.getItem(medsDateKey) || '{}');
           taken[medId] = !taken[medId];
-          Haptic.select();
+          Haptic.select(e);
           localStorage.setItem(medsDateKey, JSON.stringify(taken));
           renderHome();
         });
@@ -821,8 +938,8 @@
     var cancelBtn = document.getElementById('btn-checkin-cancel');
 
     if (prevBtn) {
-      prevBtn.addEventListener('click', function () {
-        Haptic.tap();
+      prevBtn.addEventListener('click', function (e) {
+        Haptic.tap(e);
         saveCurrentStepData();
         state.checkinStep--;
         renderCheckinStep();
@@ -830,9 +947,9 @@
     }
 
     if (nextBtn) {
-      nextBtn.addEventListener('click', function () {
+      nextBtn.addEventListener('click', function (e) {
         if (validateCurrentStep()) {
-          Haptic.tap();
+          Haptic.tap(e);
           saveCurrentStepData();
           state.checkinStep++;
           renderCheckinStep();
@@ -841,8 +958,8 @@
     }
 
     if (submitBtn) {
-      submitBtn.addEventListener('click', function () {
-        Haptic.select();
+      submitBtn.addEventListener('click', function (e) {
+        Haptic.select(e);
         saveCurrentStepData();
         submitCheckIn();
       });
@@ -861,7 +978,7 @@
   function bindRatingButtons() {
     var ratingBtns = document.querySelectorAll('.rating-btn');
     for (var i = 0; i < ratingBtns.length; i++) {
-      ratingBtns[i].addEventListener('click', function () {
+      ratingBtns[i].addEventListener('click', function (e) {
         var value = parseInt(this.getAttribute('data-value'), 10);
         var selector = this.closest('.rating-selector');
         var field = selector.getAttribute('data-field');
@@ -873,7 +990,7 @@
         }
         this.classList.add('selected');
         state.checkinData[field] = value;
-        Haptic.select();
+        Haptic.select(e);
       });
     }
   }
@@ -899,7 +1016,8 @@
     var step = CHECKIN_STEPS[state.checkinStep];
     if (step.type === 'rating' && !state.checkinData[step.field]) {
       UI.showToast(UI.t(step.questionKey), 'info');
-      Haptic.error();
+      var stepCard = document.querySelector('.checkin-step-card') || document.getElementById('app-content');
+      Haptic.error(stepCard);
       return false;
     }
     return true;
@@ -1089,8 +1207,8 @@
     spawnConfetti();
 
     /* Bind continue button */
-    document.getElementById('celebration-continue').addEventListener('click', function () {
-      Haptic.tap();
+    document.getElementById('celebration-continue').addEventListener('click', function (e) {
+      Haptic.tap(e);
       overlay.style.opacity = '0';
       overlay.style.transition = 'opacity 0.3s ease';
       setTimeout(function () {
@@ -1620,8 +1738,8 @@
     /* Bind suggestion chips */
     var chipBtns = document.querySelectorAll('.chat-chip');
     for (var cb = 0; cb < chipBtns.length; cb++) {
-      chipBtns[cb].addEventListener('click', function () {
-        Haptic.tap();
+      chipBtns[cb].addEventListener('click', function (e) {
+        Haptic.tap(e);
         document.getElementById('chat-input').value = this.getAttribute('data-msg');
         sendChatMessage();
         var suggestionsEl = document.getElementById('chat-suggestions');
@@ -2005,6 +2123,7 @@
     var reminderTime = Storage.getPref('reminderTime', '09:00');
     var currentTheme = Storage.getPref('theme', 'light');
     var currentAccent = Storage.getPref('accent', 'teal');
+    var soundsOn = Storage.getPref('sounds', true);
 
     var html = '';
 
@@ -2045,6 +2164,16 @@
       var ac = ACCENT_COLORS[ci];
       html += '<div class="color-option ' + (currentAccent === ac.id ? 'selected' : '') + '" data-accent="' + ac.id + '" style="background: ' + ac.hex + ';"></div>';
     }
+    html += '</div>';
+    html += '</div>';
+
+    /* Sound effects toggle */
+    html += '<div class="settings-item" id="settings-sound-toggle">';
+    html += '<div class="settings-item-left">';
+    html += '<div class="settings-item-icon">' + (soundsOn ? '🔊' : '🔇') + '</div>';
+    html += '<div class="settings-item-text"><span class="settings-item-title">' + UI.t('settings_sounds') + '</span></div>';
+    html += '</div>';
+    html += '<div class="toggle ' + (soundsOn ? 'active' : '') + '" id="toggle-sounds"></div>';
     html += '</div>';
     html += '</div>';
 
@@ -2118,8 +2247,8 @@
     /* Theme toggle */
     var themeOptions = document.querySelectorAll('#theme-row .theme-option');
     for (var ti = 0; ti < themeOptions.length; ti++) {
-      themeOptions[ti].addEventListener('click', function () {
-        Haptic.select();
+      themeOptions[ti].addEventListener('click', function (e) {
+        Haptic.select(e);
         var newTheme = this.getAttribute('data-theme');
         Storage.setPref('theme', newTheme);
         applyTheme();
@@ -2130,8 +2259,8 @@
     /* Accent color picker */
     var colorOptions = document.querySelectorAll('#accent-row .color-option');
     for (var co = 0; co < colorOptions.length; co++) {
-      colorOptions[co].addEventListener('click', function () {
-        Haptic.select();
+      colorOptions[co].addEventListener('click', function (e) {
+        Haptic.select(e);
         var newAccent = this.getAttribute('data-accent');
         Storage.setPref('accent', newAccent);
         applyTheme();
@@ -2159,6 +2288,13 @@
     document.getElementById('input-reminder-time').addEventListener('change', function () {
       Storage.setPref('reminderTime', this.value);
       scheduleReminder();
+    });
+
+    document.getElementById('settings-sound-toggle').addEventListener('click', function () {
+      var newVal = !Storage.getPref('sounds', true);
+      Storage.setPref('sounds', newVal);
+      Haptic.select();
+      renderSettings();
     });
 
     document.getElementById('settings-export').addEventListener('click', exportData);

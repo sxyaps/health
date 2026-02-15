@@ -1323,6 +1323,195 @@ a {
   to { opacity: 1; transform: scale(1); }
 }
 
+/* ========== Feedback Micro-Animations ========== */
+
+/* Ripple effect */
+.fb-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(var(--accent-r, 42), var(--accent-g, 157), var(--accent-b, 143), 0.25);
+  transform: scale(0);
+  animation: fb-ripple-expand 0.5s ease-out forwards;
+  pointer-events: none;
+  z-index: 999;
+}
+
+@keyframes fb-ripple-expand {
+  0% { transform: scale(0); opacity: 1; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+/* Bounce - small */
+.fb-bounce-sm {
+  animation: fb-bounce-sm 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+@keyframes fb-bounce-sm {
+  0% { transform: scale(1); }
+  40% { transform: scale(0.94); }
+  70% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+/* Bounce - medium */
+.fb-bounce-md {
+  animation: fb-bounce-md 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+@keyframes fb-bounce-md {
+  0% { transform: scale(1); }
+  30% { transform: scale(0.9); }
+  60% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* Bounce - large (achievements) */
+.fb-bounce-lg {
+  animation: fb-bounce-lg 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+@keyframes fb-bounce-lg {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.12); opacity: 1; }
+  70% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+/* Pulse glow */
+.fb-pulse {
+  animation: fb-pulse 0.6s ease-out !important;
+}
+
+@keyframes fb-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(var(--accent-r, 42), var(--accent-g, 157), var(--accent-b, 143), 0.5); }
+  70% { box-shadow: 0 0 0 12px rgba(var(--accent-r, 42), var(--accent-g, 157), var(--accent-b, 143), 0); }
+  100% { box-shadow: 0 0 0 0 rgba(var(--accent-r, 42), var(--accent-g, 157), var(--accent-b, 143), 0); }
+}
+
+/* Shake (error) */
+.fb-shake {
+  animation: fb-shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) !important;
+}
+
+@keyframes fb-shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-6px); }
+  30% { transform: translateX(5px); }
+  45% { transform: translateX(-4px); }
+  60% { transform: translateX(3px); }
+  75% { transform: translateX(-2px); }
+  90% { transform: translateX(1px); }
+}
+
+/* Interactive press effect for buttons and tappable elements */
+.btn-primary,
+.btn-outline,
+.rating-btn,
+.chat-send-btn,
+.chat-chip,
+.color-option,
+.theme-option,
+.med-check,
+.header-btn,
+#bottom-nav button,
+.home-cta-card,
+.celebration-btn,
+.meds-add-btn,
+.sound-option {
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), 
+              box-shadow 0.12s ease,
+              background 0.15s ease,
+              color 0.15s ease;
+}
+
+.btn-primary:active,
+.btn-outline:active,
+.chat-send-btn:active,
+.chat-chip:active,
+.celebration-btn:active,
+.meds-add-btn:active,
+.home-cta-card:active {
+  transform: scale(0.95);
+}
+
+.rating-btn:active,
+.color-option:active,
+.theme-option:active,
+.med-check:active,
+.sound-option:active {
+  transform: scale(0.88);
+}
+
+.header-btn:active,
+#bottom-nav button:active {
+  transform: scale(0.9);
+}
+
+/* Rating button selected pop */
+.rating-btn.selected {
+  animation: fb-rating-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes fb-rating-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* Check-in card entrance */
+.home-cta-card {
+  animation: fb-slide-up 0.3s ease-out;
+}
+
+@keyframes fb-slide-up {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Med check satisfying tick */
+.med-item.taken .med-check {
+  animation: fb-check-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes fb-check-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+/* Celebration badge entrance */
+.celebration-badge-item {
+  animation: fb-bounce-lg 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+
+.celebration-badge-item:nth-child(1) { animation-delay: 0.1s; }
+.celebration-badge-item:nth-child(2) { animation-delay: 0.25s; }
+.celebration-badge-item:nth-child(3) { animation-delay: 0.4s; }
+
+/* Celebration stat counter pop-in */
+.celebration-stat {
+  animation: fb-bounce-lg 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+
+.celebration-stat:nth-child(1) { animation-delay: 0.15s; }
+.celebration-stat:nth-child(2) { animation-delay: 0.3s; }
+.celebration-stat:nth-child(3) { animation-delay: 0.45s; }
+
+/* Chat bubble entrance */
+.chat-bubble {
+  animation: fb-chat-in 0.25s ease-out;
+}
+
+@keyframes fb-chat-in {
+  0% { opacity: 0; transform: translateY(8px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Nav button active indicator bounce */
+#bottom-nav button.active svg {
+  animation: fb-bounce-sm 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
 @keyframes pulse-in {
   0% { opacity: 0; transform: scale(0.8); }
   60% { transform: scale(1.05); }
