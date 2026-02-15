@@ -181,7 +181,8 @@
     checkinData: {},
     chatMessages: [],
     reminderInterval: null,
-    petSpeechTimer: null
+    petSpeechTimer: null,
+    chatInputValue: ''  /* Value from iframe input (avoids iOS form bar) */
   };
 
   /** Check-in steps configuration */
@@ -242,41 +243,29 @@
    * Called on init, on navigate to chat, and on viewport resize (keyboard).
    */
   /**
-   * Measure and set the chat screen height using a CSS custom property.
-   * Called on init, on navigate to chat, and on viewport resize (keyboard).
+   * When keyboard opens (viewport shrinks), set chat screen height so input stays visible.
+   * Only touches the chat screen element — never nav or body.
    */
-  function sizeChatScreen() {
-    var chatScreen = document.getElementById('screen-chat');
-    if (!chatScreen || state.currentScreen !== 'chat') return;
-
-    /* Measure how much vertical space is available */
-    var appContent = document.getElementById('app-content');
-    var nav = document.getElementById('bottom-nav');
-    var contentH = appContent ? appContent.clientHeight : window.innerHeight;
-    var navH = nav ? nav.offsetHeight : 0;
-
-    /* Available = content area minus nav bar */
-    var chatH = contentH - navH;
-    chatScreen.style.setProperty('--chat-h', chatH + 'px');
-
-    /* Scroll messages to bottom */
-    var chatMsgs = document.getElementById('chat-messages');
-    if (chatMsgs) {
-      setTimeout(function () { chatMsgs.scrollTop = chatMsgs.scrollHeight; }, 50);
-    }
-  }
-
   function setupKeyboardHandling() {
-    /* Re-size chat whenever the viewport changes (keyboard open/close) */
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', function () {
-        sizeChatScreen();
-      });
-    }
+    if (!window.visualViewport) return;
+    var fullHeight = window.visualViewport.height;
 
-    /* Also resize on orientation change */
-    window.addEventListener('resize', function () {
-      sizeChatScreen();
+    window.visualViewport.addEventListener('resize', function () {
+      if (state.currentScreen !== 'chat') return;
+      var chatScreen = document.getElementById('screen-chat');
+      if (!chatScreen) return;
+      var vv = window.visualViewport.height;
+      var keyboardOpen = fullHeight - vv > 150;
+      if (keyboardOpen) {
+        var headerEl = document.getElementById('app-header');
+        var navEl = document.getElementById('bottom-nav');
+        var headerPx = headerEl ? headerEl.offsetHeight : 56;
+        var navPx = navEl ? navEl.offsetHeight : 64;
+        chatScreen.style.height = (vv - headerPx - navPx) + 'px';
+      } else {
+        chatScreen.style.height = '';
+        fullHeight = vv;
+      }
     });
   }
 
@@ -383,16 +372,6 @@
       document.activeElement.blur();
     }
 
-    /* Lock outer scroll when on chat, unlock for others */
-    var appContent = document.getElementById('app-content');
-    if (screenId === 'chat') {
-      if (appContent) appContent.style.overflow = 'hidden';
-      /* Size chat after render */
-      setTimeout(sizeChatScreen, 10);
-    } else {
-      if (appContent) appContent.style.overflow = '';
-    }
-
     var renderers = {
       home: renderHome,
       checkin: renderCheckin,
@@ -405,19 +384,6 @@
 
     if (renderers[screenId]) {
       renderers[screenId]();
-    }
-
-    /*
-     * iOS shows a form navigation bar (< > arrows) above the keyboard when
-     * multiple inputs exist on the page. Clear all non-active screen content
-     * so iOS only sees inputs from the current screen.
-     */
-    var allScreens = document.querySelectorAll('.screen');
-    for (var si = 0; si < allScreens.length; si++) {
-      var scr = allScreens[si];
-      if (!scr.classList.contains('active') && scr.id !== 'screen-onboarding') {
-        scr.innerHTML = '';
-      }
     }
   }
 
@@ -1757,6 +1723,28 @@
 
   /* ========== Chat Screen ========== */
 
+  /**
+   * Minimal HTML for the chat input iframe. iOS does not show the form
+   * navigation bar (< > arrows) for content in a separate document.
+   * @param {string} placeholder - Placeholder text
+   * @returns {string} Full HTML document string
+   */
+  function getChatInputIframeHTML(placeholder) {
+    var ph = (placeholder || 'Message...').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+      '<style>*{box-sizing:border-box}body{margin:0;padding:0;min-height:100%;font:15px system-ui,sans-serif}' +
+      '#in{min-height:44px;padding:10px 16px;outline:0;word-wrap:break-word;max-height:100px;overflow-y:auto}' +
+      '#in:empty::before{content:attr(data-ph);color:#888}</style></head><body>' +
+      '<div id="in" contenteditable="true" data-ph="' + ph + '" role="textbox"></div>' +
+      '<script>var el=document.getElementById("in");function sendVal(){try{window.parent.postMessage({type:"chatInput",value:el.textContent.trim()},"*")}catch(e){}}' +
+      'function submit(){var v=el.textContent.trim();if(v){window.parent.postMessage({type:"chatSubmit",value:v},"*");el.textContent="";sendVal();}}' +
+      'el.addEventListener("input",sendVal);' +
+      'el.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();submit();}});' +
+      'window.addEventListener("message",function(e){var d=e.data;if(d.type==="chatClear"){el.textContent="";sendVal();}' +
+      'else if(d.type==="chatSet"){el.textContent=d.value||"";sendVal();}' +
+      'else if(d.type==="chatBlur"){el.blur();}});</script></body></html>';
+  }
+
   function renderChat() {
     var container = document.getElementById('screen-chat');
     var hasMessages = state.chatMessages.length > 0;
@@ -1791,10 +1779,10 @@
     }
     html += '</div>';
 
-    /* Input bar — ChatGPT-style using contenteditable to avoid iOS form bar */
+    /* Input bar — iframe input so iOS does not show form navigation bar */
     html += '<div class="chat-input-bar">';
     html += '<div class="chat-input-wrap">';
-    html += '<div id="chat-input" class="chat-input-ce" contenteditable="true" role="textbox" data-placeholder="' + UI.t('chat_placeholder') + '"></div>';
+    html += '<iframe id="chat-input-iframe" class="chat-input-iframe" title="' + escapeHtml(UI.t('chat_placeholder')) + '"></iframe>';
     html += '</div>';
     html += '<button class="chat-send-btn" id="btn-chat-send" aria-label="' + UI.t('chat_send') + '">' + UI.icon('send') + '</button>';
     html += '</div>';
@@ -1802,60 +1790,55 @@
     html += '</div>';
     container.innerHTML = html;
 
+    /* Load iframe content (separate document = no iOS form bar) */
+    state.chatInputValue = '';
+    var iframe = document.getElementById('chat-input-iframe');
+    if (iframe) {
+      iframe.srcdoc = getChatInputIframeHTML(UI.t('chat_placeholder'));
+    }
+
     /* Scroll to bottom */
     var messagesEl = document.getElementById('chat-messages');
     messagesEl.scrollTop = messagesEl.scrollHeight;
 
-    /* Bind events */
     var sendBtn = document.getElementById('btn-chat-send');
-    var chatInput = document.getElementById('chat-input');
+
+    /* One listener per chat render; remove previous so we don't duplicate */
+    if (state.chatInputMessageHandler) {
+      window.removeEventListener('message', state.chatInputMessageHandler);
+    }
+    function onChatIframeMessage(e) {
+      if (!e.data) return;
+      if (e.data.type === 'chatInput') {
+        state.chatInputValue = e.data.value || '';
+        sendBtn.classList.toggle('active', !!state.chatInputValue);
+      } else if (e.data.type === 'chatSubmit') {
+        state.chatInputValue = e.data.value || '';
+        if (state.chatInputValue) sendChatMessage();
+      }
+    }
+    state.chatInputMessageHandler = onChatIframeMessage;
+    window.addEventListener('message', onChatIframeMessage);
 
     sendBtn.addEventListener('click', sendChatMessage);
 
-    /* Enter to send (without shift), shift+enter for newline */
-    chatInput.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendChatMessage();
-      }
-    });
-
-    /* Activate send button when typing */
-    chatInput.addEventListener('input', function () {
-      var text = this.textContent.trim();
-      if (text) {
-        sendBtn.classList.add('active');
-      } else {
-        sendBtn.classList.remove('active');
-      }
-    });
-
-    /* Paste as plain text only */
-    chatInput.addEventListener('paste', function (e) {
-      e.preventDefault();
-      var text = (e.clipboardData || window.clipboardData).getData('text/plain');
-      document.execCommand('insertText', false, text);
-    });
-
-    /* Dismiss keyboard when scrolling messages (like iMessage/ChatGPT) */
-    var scrollStartY = 0;
-    messagesEl.addEventListener('touchstart', function (e) {
-      scrollStartY = e.touches[0].clientY;
-    }, { passive: true });
-
+    /* Dismiss keyboard when scrolling messages */
     messagesEl.addEventListener('touchmove', function () {
-      /* If user is scrolling messages, blur the input to dismiss keyboard */
-      if (document.activeElement === chatInput) {
-        chatInput.blur();
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({ type: 'chatBlur' }, '*');
       }
     }, { passive: true });
 
-    /* Bind suggestion chips */
+    /* Suggestion chips: set value in iframe and send */
     var chipBtns = document.querySelectorAll('.chat-chip');
     for (var cb = 0; cb < chipBtns.length; cb++) {
       chipBtns[cb].addEventListener('click', function (e) {
         Haptic.tap(e);
-        document.getElementById('chat-input').textContent = this.getAttribute('data-msg');
+        var msg = this.getAttribute('data-msg');
+        state.chatInputValue = msg;
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage({ type: 'chatSet', value: msg }, '*');
+        }
         sendChatMessage();
         var suggestionsEl = document.getElementById('chat-suggestions');
         if (suggestionsEl) suggestionsEl.classList.add('hidden');
@@ -1932,11 +1915,17 @@
    * Tries OpenAI API first, falls back to rule-based if unavailable.
    */
   function sendChatMessage() {
-    var input = document.getElementById('chat-input');
-    var text = (input.textContent || input.innerText || '').trim();
+    var text = (state.chatInputValue || '').trim();
     if (!text) return;
 
     Haptic.tap();
+
+    state.chatInputValue = '';
+    var iframe = document.getElementById('chat-input-iframe');
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage({ type: 'chatClear' }, '*');
+    }
+    document.getElementById('btn-chat-send').classList.remove('active');
 
     /* Hide suggestion chips after first message */
     var suggestionsEl = document.getElementById('chat-suggestions');
@@ -1944,14 +1933,10 @@
 
     /* Add user message */
     state.chatMessages.push({ role: 'user', text: text });
-    input.textContent = '';
 
     /* Remove welcome state if present */
     var welcomeEl = document.querySelector('.chat-welcome');
     if (welcomeEl) welcomeEl.remove();
-
-    /* Deactivate send button */
-    document.getElementById('btn-chat-send').classList.remove('active');
 
     /* Show user message immediately */
     var messagesEl = document.getElementById('chat-messages');
