@@ -463,6 +463,10 @@ a {
   border-top: 1px solid var(--color-divider);
   box-shadow: 0 -2px 8px rgba(26, 46, 42, 0.06);
   padding-bottom: env(safe-area-inset-bottom, 0);
+  /* Smooth transition for keyboard show/hide */
+  transform: translateY(0);
+  opacity: 1;
+  transition: transform 0.25s ease, opacity 0.25s ease;
 }
 
 #bottom-nav button {

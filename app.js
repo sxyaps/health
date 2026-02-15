@@ -407,7 +407,12 @@
       document.documentElement.classList.add('chat-active-html');
     } else {
       document.body.classList.remove('chat-active');
+      document.body.classList.remove('keyboard-open');
       document.documentElement.classList.remove('chat-active-html');
+      /* Blur any focused input to dismiss keyboard */
+      if (document.activeElement && document.activeElement.blur) {
+        document.activeElement.blur();
+      }
     }
 
     var renderers = {
