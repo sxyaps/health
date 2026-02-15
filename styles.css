@@ -957,27 +957,11 @@ a {
  */
 body.chat-active #app-content {
   overflow: hidden !important;
-  /*
-   * Full viewport
-   * minus header (base + top safe area)
-   * minus nav bar (base + bottom safe area)
-   */
-  height: calc(
-    100dvh
-    - var(--header-height) - env(safe-area-inset-top, 0px)
-    - var(--nav-height) - env(safe-area-inset-bottom, 0px)
-  );
   padding-bottom: 0 !important;
-  display: flex;
-  flex-direction: column;
 }
 
 body.chat-active.keyboard-open #app-content {
-  /* Keyboard open = nav hidden, so only subtract header */
-  height: calc(
-    var(--vv-height, 100dvh)
-    - var(--header-height) - env(safe-area-inset-top, 0px)
-  );
+  padding-bottom: 0 !important;
 }
 
 /* Chat screen — full bleed, fills parent */
@@ -991,8 +975,16 @@ body.chat-active.keyboard-open #app-content {
 #screen-chat.active {
   display: flex !important;
   flex-direction: column;
-  flex: 1;
-  min-height: 0;
+  /*
+   * Use 100% of parent minus the fixed nav bar space.
+   * The nav is position:fixed so we must subtract it ourselves.
+   */
+  height: calc(100% - var(--nav-height) - env(safe-area-inset-bottom, 0px));
+}
+
+body.keyboard-open #screen-chat.active {
+  /* When keyboard is open, nav is hidden — use full parent height */
+  height: 100%;
 }
 
 .chat-container {
