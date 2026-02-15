@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#2a9d8f">
+  <meta name="description" content="HealthPulse — Track your daily health check-ins and get personalized wellness insights. Offline-first, privacy-focused PWA.">
+
+  <!-- PWA Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="HealthPulse">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="HealthPulse">
+  <meta name="msapplication-TileColor" content="#2a9d8f">
+
+  <!-- Manifest & Icons -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+
+  <title>HealthPulse</title>
+</head>
+<body>
+
+  <!-- ===== Onboarding Screen ===== -->
+  <section id="screen-onboarding" class="screen active">
+    <div class="onboarding-icon">
+      <img src="icon.svg" alt="HealthPulse" width="96" height="96">
+    </div>
+    <h1 class="onboarding-title" id="onboarding-title">Welcome to HealthPulse</h1>
+    <p class="onboarding-subtitle" id="onboarding-subtitle">Your private daily health companion</p>
+    <p class="onboarding-pick" id="onboarding-pick">Choose your language to get started</p>
+    <div class="onboarding-buttons">
+      <button class="btn-lang primary" id="btn-lang-en">English</button>
+      <button class="btn-lang secondary" id="btn-lang-nl">Nederlands</button>
+    </div>
+  </section>
+
+  <!-- ===== App Shell ===== -->
+  <div id="app-shell">
+
+    <!-- Header -->
+    <header id="app-header">
+      <h1 id="header-title">HealthPulse</h1>
+      <button class="header-btn" id="btn-settings" aria-label="Settings"></button>
+    </header>
+
+    <!-- Main Content Area -->
+    <main id="app-content">
+      <section id="screen-home" class="screen"></section>
+      <section id="screen-checkin" class="screen"></section>
+      <section id="screen-insights" class="screen"></section>
+      <section id="screen-mind" class="screen"></section>
+      <section id="screen-chat" class="screen"></section>
+      <section id="screen-settings" class="screen"></section>
+      <section id="screen-reports" class="screen"></section>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav id="bottom-nav">
+      <button data-screen="home" aria-label="Home">
+        <span class="nav-icon" id="nav-icon-home"></span>
+        <span class="nav-label" id="nav-label-home">Home</span>
+      </button>
+      <button data-screen="checkin" aria-label="Check-in">
+        <span class="nav-icon" id="nav-icon-checkin"></span>
+        <span class="nav-label" id="nav-label-checkin">Check-in</span>
+      </button>
+      <button data-screen="insights" aria-label="Insights">
+        <span class="nav-icon" id="nav-icon-insights"></span>
+        <span class="nav-label" id="nav-label-insights">Insights</span>
+      </button>
+      <button data-screen="mind" aria-label="Mental Health">
+        <span class="nav-icon" id="nav-icon-mind"></span>
+        <span class="nav-label" id="nav-label-mind">Mind</span>
+      </button>
+      <button data-screen="chat" aria-label="Chat">
+        <span class="nav-icon" id="nav-icon-chat"></span>
+        <span class="nav-label" id="nav-label-chat">Chat</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Dialog Container -->
+  <div id="dialog-container"></div>
+
+  <!-- Scripts (loaded in dependency order) -->
+  <script src="storage.js"></script>
+  <script src="insights.js"></script>
+  <script src="ui.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>
