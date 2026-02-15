@@ -1797,7 +1797,7 @@
 
     /* Input bar — ChatGPT-style */
     html += '<div class="chat-input-bar">';
-    html += '<input type="text" id="chat-input" placeholder="' + UI.t('chat_placeholder') + '" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send">';
+    html += '<input type="text" id="chat-input" placeholder="' + UI.t('chat_placeholder') + '" autocomplete="off" enterkeyhint="send">';
     html += '<button class="chat-send-btn" id="btn-chat-send" aria-label="' + UI.t('chat_send') + '">' + UI.icon('send') + '</button>';
     html += '</div>';
 
@@ -1825,6 +1825,19 @@
         sendBtn.classList.remove('active');
       }
     });
+
+    /* Dismiss keyboard when scrolling messages (like iMessage/ChatGPT) */
+    var scrollStartY = 0;
+    messagesEl.addEventListener('touchstart', function (e) {
+      scrollStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    messagesEl.addEventListener('touchmove', function () {
+      /* If user is scrolling messages, blur the input to dismiss keyboard */
+      if (document.activeElement === chatInput) {
+        chatInput.blur();
+      }
+    }, { passive: true });
 
     /* Bind suggestion chips */
     var chipBtns = document.querySelectorAll('.chat-chip');
