@@ -1791,9 +1791,11 @@
     }
     html += '</div>';
 
-    /* Input bar — ChatGPT-style */
+    /* Input bar — ChatGPT-style using contenteditable to avoid iOS form bar */
     html += '<div class="chat-input-bar">';
-    html += '<input type="text" id="chat-input" placeholder="' + UI.t('chat_placeholder') + '" autocomplete="off" enterkeyhint="send">';
+    html += '<div class="chat-input-wrap">';
+    html += '<div id="chat-input" class="chat-input-ce" contenteditable="true" role="textbox" data-placeholder="' + UI.t('chat_placeholder') + '"></div>';
+    html += '</div>';
     html += '<button class="chat-send-btn" id="btn-chat-send" aria-label="' + UI.t('chat_send') + '">' + UI.icon('send') + '</button>';
     html += '</div>';
 
@@ -1809,17 +1811,30 @@
     var chatInput = document.getElementById('chat-input');
 
     sendBtn.addEventListener('click', sendChatMessage);
-    chatInput.addEventListener('keypress', function (e) {
-      if (e.key === 'Enter') sendChatMessage();
+
+    /* Enter to send (without shift), shift+enter for newline */
+    chatInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendChatMessage();
+      }
     });
 
     /* Activate send button when typing */
     chatInput.addEventListener('input', function () {
-      if (this.value.trim()) {
+      var text = this.textContent.trim();
+      if (text) {
         sendBtn.classList.add('active');
       } else {
         sendBtn.classList.remove('active');
       }
+    });
+
+    /* Paste as plain text only */
+    chatInput.addEventListener('paste', function (e) {
+      e.preventDefault();
+      var text = (e.clipboardData || window.clipboardData).getData('text/plain');
+      document.execCommand('insertText', false, text);
     });
 
     /* Dismiss keyboard when scrolling messages (like iMessage/ChatGPT) */
@@ -1840,7 +1855,7 @@
     for (var cb = 0; cb < chipBtns.length; cb++) {
       chipBtns[cb].addEventListener('click', function (e) {
         Haptic.tap(e);
-        document.getElementById('chat-input').value = this.getAttribute('data-msg');
+        document.getElementById('chat-input').textContent = this.getAttribute('data-msg');
         sendChatMessage();
         var suggestionsEl = document.getElementById('chat-suggestions');
         if (suggestionsEl) suggestionsEl.classList.add('hidden');
@@ -1918,7 +1933,7 @@
    */
   function sendChatMessage() {
     var input = document.getElementById('chat-input');
-    var text = input.value.trim();
+    var text = (input.textContent || input.innerText || '').trim();
     if (!text) return;
 
     Haptic.tap();
@@ -1929,7 +1944,7 @@
 
     /* Add user message */
     state.chatMessages.push({ role: 'user', text: text });
-    input.value = '';
+    input.textContent = '';
 
     /* Remove welcome state if present */
     var welcomeEl = document.querySelector('.chat-welcome');

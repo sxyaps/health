@@ -1083,8 +1083,12 @@ a {
 
 /* No extra rules needed — iOS form nav handled via JS disabled attribute */
 
-.chat-input-bar input {
+.chat-input-wrap {
   flex: 1;
+  min-width: 0;
+}
+
+.chat-input-ce {
   border: 1.5px solid var(--color-divider);
   border-radius: 22px;
   padding: 10px 16px;
@@ -1093,14 +1097,28 @@ a {
   color: var(--color-text);
   outline: none;
   transition: border-color 0.15s ease;
+  max-height: 100px;
+  overflow-y: auto;
+  word-wrap: break-word;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
-.chat-input-bar input:focus {
+.chat-input-ce:focus {
   border-color: var(--color-primary);
 }
 
-.chat-input-bar input::placeholder {
+/* Placeholder for contenteditable */
+.chat-input-ce:empty::before {
+  content: attr(data-placeholder);
   color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+/* Prevent pasting rich text */
+.chat-input-ce * {
+  font: inherit;
+  color: inherit;
 }
 
 .chat-send-btn {
@@ -1207,7 +1225,7 @@ a {
   border-top-color: #252525;
 }
 
-[data-theme="dark"] .chat-input-bar input {
+[data-theme="dark"] .chat-input-ce {
   background: #252525;
   border-color: #333;
   color: #e4e4e4;
