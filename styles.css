@@ -463,10 +463,6 @@ a {
   border-top: 1px solid var(--color-divider);
   box-shadow: 0 -2px 8px rgba(26, 46, 42, 0.06);
   padding-bottom: env(safe-area-inset-bottom, 0);
-  /* Smooth transition for keyboard show/hide */
-  transform: translateY(0);
-  opacity: 1;
-  transition: transform 0.25s ease, opacity 0.25s ease;
 }
 
 #bottom-nav button {
@@ -954,21 +950,7 @@ a {
 
 /* ========== Chat Interface (ChatGPT-style) ========== */
 
-/*
- * When chat is active, lock the outer scroll container (#app-content)
- * so only the chat's own message area scrolls. This prevents the
- * double-scroll / rubber-band issue on iOS.
- */
-body.chat-active #app-content {
-  overflow: hidden !important;
-  padding-bottom: 0 !important;
-}
-
-body.chat-active.keyboard-open #app-content {
-  padding-bottom: 0 !important;
-}
-
-/* Chat screen — full bleed, fills parent */
+/* Chat screen — full bleed */
 #screen-chat {
   overflow: hidden !important;
   padding: 0 !important;
@@ -979,16 +961,8 @@ body.chat-active.keyboard-open #app-content {
 #screen-chat.active {
   display: flex !important;
   flex-direction: column;
-  /*
-   * Use 100% of parent minus the fixed nav bar space.
-   * The nav is position:fixed so we must subtract it ourselves.
-   */
-  height: calc(100% - var(--nav-height) - env(safe-area-inset-bottom, 0px));
-}
-
-body.keyboard-open #screen-chat.active {
-  /* When keyboard is open, nav is hidden — use full parent height */
-  height: 100%;
+  /* Height set dynamically by JS via --chat-h custom property */
+  height: var(--chat-h, 400px);
 }
 
 .chat-container {
@@ -1225,35 +1199,7 @@ body.keyboard-open #screen-chat.active {
   line-height: 1.5;
 }
 
-/* Hide bottom nav when keyboard is open */
-body.keyboard-open #bottom-nav {
-  transform: translateY(100%);
-  pointer-events: none;
-  opacity: 0;
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-/* Also hide nav when keyboard closes but still on chat (iOS transition) */
-body.keyboard-open #app-content {
-  padding-bottom: 0 !important;
-}
-
-/* Prevent any bounce/overscroll on the page when in chat */
-body.chat-active {
-  overflow: hidden;
-  overscroll-behavior: none;
-}
-
-body.chat-active #app-shell {
-  height: 100vh;
-  height: 100dvh;
-  overflow: hidden;
-}
-
-html.chat-active-html {
-  overflow: hidden;
-  overscroll-behavior: none;
-}
+/* No extra rules needed — chat sizing handled via JS */
 
 /* Dark mode overrides for chat */
 [data-theme="dark"] .chat-input-bar {

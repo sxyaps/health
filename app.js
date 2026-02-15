@@ -238,59 +238,45 @@
   }
 
   /**
-   * Detect virtual keyboard open/close on iOS and Android.
-   * Uses the Visual Viewport API to track viewport height changes.
-   * When the keyboard opens, adds a 'keyboard-open' class to body
-   * and sets a CSS custom property --vv-height for layout adjustments.
+   * Measure and set the chat screen height using a CSS custom property.
+   * Called on init, on navigate to chat, and on viewport resize (keyboard).
    */
-  function setupKeyboardHandling() {
-    function setKeyboardOpen(open) {
-      /* Only add keyboard-open when on chat screen */
-      if (open && state.currentScreen === 'chat') {
-        document.body.classList.add('keyboard-open');
-        setTimeout(function () {
-          var chatMsgs = document.getElementById('chat-messages');
-          if (chatMsgs) chatMsgs.scrollTop = chatMsgs.scrollHeight;
-        }, 80);
-      } else {
-        document.body.classList.remove('keyboard-open');
-      }
+  /**
+   * Measure and set the chat screen height using a CSS custom property.
+   * Called on init, on navigate to chat, and on viewport resize (keyboard).
+   */
+  function sizeChatScreen() {
+    var chatScreen = document.getElementById('screen-chat');
+    if (!chatScreen || state.currentScreen !== 'chat') return;
+
+    /* Measure how much vertical space is available */
+    var appContent = document.getElementById('app-content');
+    var nav = document.getElementById('bottom-nav');
+    var contentH = appContent ? appContent.clientHeight : window.innerHeight;
+    var navH = nav ? nav.offsetHeight : 0;
+
+    /* Available = content area minus nav bar */
+    var chatH = contentH - navH;
+    chatScreen.style.setProperty('--chat-h', chatH + 'px');
+
+    /* Scroll messages to bottom */
+    var chatMsgs = document.getElementById('chat-messages');
+    if (chatMsgs) {
+      setTimeout(function () { chatMsgs.scrollTop = chatMsgs.scrollHeight; }, 50);
     }
+  }
 
+  function setupKeyboardHandling() {
+    /* Re-size chat whenever the viewport changes (keyboard open/close) */
     if (window.visualViewport) {
-      var stableHeight = window.visualViewport.height;
-
       window.visualViewport.addEventListener('resize', function () {
-        var vv = window.visualViewport;
-        document.documentElement.style.setProperty('--vv-height', vv.height + 'px');
-
-        var diff = stableHeight - vv.height;
-        if (diff > 150) {
-          setKeyboardOpen(true);
-        } else {
-          setKeyboardOpen(false);
-          stableHeight = vv.height;
-        }
+        sizeChatScreen();
       });
     }
 
-    document.addEventListener('focusin', function (e) {
-      var tag = e.target.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA') {
-        setTimeout(function () {
-          var chatMsgs = document.getElementById('chat-messages');
-          if (chatMsgs) chatMsgs.scrollTop = chatMsgs.scrollHeight;
-        }, 350);
-      }
-    });
-
-    document.addEventListener('focusout', function () {
-      setTimeout(function () {
-        var tag = document.activeElement ? document.activeElement.tagName : '';
-        if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
-          setKeyboardOpen(false);
-        }
-      }, 150);
+    /* Also resize on orientation change */
+    window.addEventListener('resize', function () {
+      sizeChatScreen();
     });
   }
 
@@ -392,30 +378,19 @@
     state.currentScreen = screenId;
     UI.showScreen(screenId);
 
-    /* Lock outer scroll when on chat screen, unlock for everything else */
+    /* Dismiss keyboard when leaving any screen */
+    if (document.activeElement && document.activeElement.blur) {
+      document.activeElement.blur();
+    }
+
+    /* Lock outer scroll when on chat, unlock for others */
+    var appContent = document.getElementById('app-content');
     if (screenId === 'chat') {
-      document.body.classList.add('chat-active');
-      document.documentElement.classList.add('chat-active-html');
+      if (appContent) appContent.style.overflow = 'hidden';
+      /* Size chat after render */
+      setTimeout(sizeChatScreen, 10);
     } else {
-      /* Blur any focused input first to dismiss keyboard */
-      if (document.activeElement && document.activeElement.blur) {
-        document.activeElement.blur();
-      }
-      document.body.classList.remove('chat-active');
-      document.body.classList.remove('keyboard-open');
-      document.documentElement.classList.remove('chat-active-html');
-      /* Force nav bar back to visible */
-      var nav = document.getElementById('bottom-nav');
-      if (nav) {
-        nav.style.transform = 'translateY(0)';
-        nav.style.opacity = '1';
-        nav.style.pointerEvents = '';
-        /* Clear inline styles after transition so CSS takes over again */
-        setTimeout(function () {
-          nav.style.transform = '';
-          nav.style.opacity = '';
-        }, 300);
-      }
+      if (appContent) appContent.style.overflow = '';
     }
 
     var renderers = {
