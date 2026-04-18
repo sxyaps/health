@@ -1,101 +1,162 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#2a9d8f">
-  <meta name="description" content="HealthPulse — Track your daily health check-ins and get personalized wellness insights. Offline-first, privacy-focused PWA.">
-
-  <!-- PWA Meta Tags -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="HealthPulse">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="application-name" content="HealthPulse">
-  <meta name="msapplication-TileColor" content="#2a9d8f">
-
-  <!-- Manifest & Icons -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="icon.svg">
-
-  <!-- Stylesheet -->
-  <link rel="stylesheet" href="styles.css">
-
-  <title>HealthPulse</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thierry Stravers — Parfums</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Montserrat:wght@300;400&display=swap" rel="stylesheet" />
 </head>
 <body>
 
-  <!-- ===== Onboarding Screen ===== -->
-  <section id="screen-onboarding" class="screen active">
-    <div class="onboarding-icon">
-      <img src="icon.svg" alt="HealthPulse" width="96" height="96">
-    </div>
-    <h1 class="onboarding-title" id="onboarding-title">Welcome to HealthPulse</h1>
-    <p class="onboarding-subtitle" id="onboarding-subtitle">Your private daily health companion</p>
-    <p class="onboarding-pick" id="onboarding-pick">Choose your language to get started</p>
-    <div class="onboarding-buttons">
-      <button class="btn-lang primary" id="btn-lang-en">English</button>
-      <button class="btn-lang secondary" id="btn-lang-nl">Nederlands</button>
+  <header>
+    <nav>
+      <a href="#" class="logo">THIERRY STRAVERS</a>
+      <ul>
+        <li><a href="#fragrances">Fragrances</a></li>
+        <li><a href="#about">Maison</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-content">
+      <p class="hero-subtitle">Paris · Est. 2018</p>
+      <h1>The Art of<br /><em>Rare Perfumery</em></h1>
+      <p class="hero-desc">Each fragrance is a story told through the finest raw ingredients, composed for those who seek the extraordinary.</p>
+      <a href="#fragrances" class="btn">Discover the Collection</a>
     </div>
   </section>
 
-  <!-- ===== App Shell ===== -->
-  <div id="app-shell">
+  <section id="fragrances" class="fragrances">
+    <div class="section-header">
+      <span class="label">Collection</span>
+      <h2>Signature Fragrances</h2>
+    </div>
+    <div class="grid">
 
-    <!-- Header -->
-    <header id="app-header">
-      <h1 id="header-title">HealthPulse</h1>
-      <button class="header-btn" id="btn-settings" aria-label="Settings"></button>
-    </header>
+      <article class="card">
+        <div class="card-img" style="background-color: #c8a97e;"></div>
+        <div class="card-body">
+          <h3>Ambre Sauvage</h3>
+          <p class="notes">Labdanum · Oud · Vanilla · Sandalwood</p>
+          <p>A warm, resinous embrace. Wild amber from the highlands meets aged oud in a fragrance that deepens with the heat of your skin.</p>
+          <span class="price">€195</span>
+        </div>
+      </article>
 
-    <!-- Main Content Area -->
-    <main id="app-content">
-      <section id="screen-home" class="screen"></section>
-      <section id="screen-checkin" class="screen"></section>
-      <section id="screen-insights" class="screen"></section>
-      <section id="screen-mind" class="screen"></section>
-      <section id="screen-chat" class="screen"></section>
-      <section id="screen-settings" class="screen"></section>
-      <section id="screen-reports" class="screen"></section>
-    </main>
+      <article class="card">
+        <div class="card-img" style="background-color: #a3b8c2;"></div>
+        <div class="card-body">
+          <h3>Brume de Mer</h3>
+          <p class="notes">Sea Salt · Iris · Vetiver · Musk</p>
+          <p>The first breath of ocean air at dawn. Crisp, mineral, and quietly hypnotic — a fragrance that evokes solitude and freedom.</p>
+          <span class="price">€180</span>
+        </div>
+      </article>
 
-    <!-- Bottom Navigation -->
-    <nav id="bottom-nav">
-      <button data-screen="home" aria-label="Home">
-        <span class="nav-icon" id="nav-icon-home"></span>
-        <span class="nav-label" id="nav-label-home">Home</span>
-      </button>
-      <button data-screen="checkin" aria-label="Check-in">
-        <span class="nav-icon" id="nav-icon-checkin"></span>
-        <span class="nav-label" id="nav-label-checkin">Check-in</span>
-      </button>
-      <button data-screen="insights" aria-label="Insights">
-        <span class="nav-icon" id="nav-icon-insights"></span>
-        <span class="nav-label" id="nav-label-insights">Insights</span>
-      </button>
-      <button data-screen="mind" aria-label="Mental Health">
-        <span class="nav-icon" id="nav-icon-mind"></span>
-        <span class="nav-label" id="nav-label-mind">Mind</span>
-      </button>
-      <button data-screen="chat" aria-label="Chat">
-        <span class="nav-icon" id="nav-icon-chat"></span>
-        <span class="nav-label" id="nav-label-chat">Chat</span>
-      </button>
-    </nav>
-  </div>
+      <article class="card">
+        <div class="card-img" style="background-color: #b5997a;"></div>
+        <div class="card-body">
+          <h3>Rose Eternelle</h3>
+          <p class="notes">Damask Rose · Patchouli · Benzoin · Musk</p>
+          <p>Not merely a rose — a timeless declaration. Petals preserved in warmth, a scent that lingers long after the moment has passed.</p>
+          <span class="price">€210</span>
+        </div>
+      </article>
 
-  <!-- Toast Notification -->
-  <div id="toast" class="toast"></div>
+      <article class="card">
+        <div class="card-img" style="background-color: #7a8c6e;"></div>
+        <div class="card-body">
+          <h3>Forêt Noire</h3>
+          <p class="notes">Cedarwood · Black Pepper · Leather · Oakmoss</p>
+          <p>Deep in the ancient forest where light barely reaches. A bold, earthy composition for those drawn to shadow and mystery.</p>
+          <span class="price">€185</span>
+        </div>
+      </article>
 
-  <!-- Dialog Container -->
-  <div id="dialog-container"></div>
+      <article class="card">
+        <div class="card-img" style="background-color: #d4b8a0;"></div>
+        <div class="card-body">
+          <h3>Lumière Dorée</h3>
+          <p class="notes">Neroli · Bergamot · Jasmine · White Musk</p>
+          <p>Sunlight suspended in a bottle. A luminous, radiant fragrance that opens with citrus brightness and settles into soft florals.</p>
+          <span class="price">€175</span>
+        </div>
+      </article>
 
-  <!-- Scripts (loaded in dependency order) -->
-  <script src="storage.js"></script>
-  <script src="insights.js"></script>
-  <script src="ui.js"></script>
-  <script src="app.js"></script>
+      <article class="card">
+        <div class="card-img" style="background-color: #8e7d9b;"></div>
+        <div class="card-body">
+          <h3>Nuit Infinie</h3>
+          <p class="notes">Violet · Incense · Ambergris · Dark Musk</p>
+          <p>When day dissolves into night. Smoky incense and deep violet meet ambergris in a fragrance born for the hours after midnight.</p>
+          <span class="price">€220</span>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section id="about" class="about">
+    <div class="about-inner">
+      <div class="about-text">
+        <span class="label">Maison Thierry Stravers</span>
+        <h2>Perfumery as Poetry</h2>
+        <p>Founded in Paris in 2018, Thierry Stravers began as a singular obsession: to compose fragrances that transcend trend and speak directly to emotion.</p>
+        <p>Every bottle in our collection is the result of months — sometimes years — of sourcing, testing, and refining. We work exclusively with natural and sustainably harvested raw materials, partnering with growers across Morocco, India, Madagascar, and Provence.</p>
+        <p>Our perfumes are not worn. They are inhabited.</p>
+      </div>
+      <div class="about-visual">
+        <div class="about-accent"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="quote">
+    <blockquote>
+      "A perfume is a memory<br />before the moment has happened."
+      <cite>— Thierry Stravers</cite>
+    </blockquote>
+  </section>
+
+  <section id="contact" class="contact">
+    <div class="section-header">
+      <span class="label">Bespoke &amp; Enquiries</span>
+      <h2>Get in Touch</h2>
+    </div>
+    <div class="contact-inner">
+      <div class="contact-info">
+        <div class="contact-item">
+          <h4>Atelier</h4>
+          <p>12 Rue du Faubourg Saint-Honoré<br />75008 Paris, France</p>
+        </div>
+        <div class="contact-item">
+          <h4>Hours</h4>
+          <p>Monday – Saturday<br />10:00 – 19:00</p>
+        </div>
+        <div class="contact-item">
+          <h4>Email</h4>
+          <p>contact@thierrystravers.com</p>
+        </div>
+      </div>
+      <form class="contact-form">
+        <input type="text" placeholder="Your name" required />
+        <input type="email" placeholder="Your email" required />
+        <textarea placeholder="Your message" rows="5" required></textarea>
+        <button type="submit" class="btn">Send Message</button>
+      </form>
+    </div>
+  </section>
+
+  <footer>
+    <p class="logo">THIERRY STRAVERS</p>
+    <p class="tagline">Rare Perfumery · Paris</p>
+    <p class="copy">&copy; 2026 Thierry Stravers. All rights reserved.</p>
+  </footer>
 
 </body>
 </html>
