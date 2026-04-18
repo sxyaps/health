@@ -7,14 +7,17 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Montserrat:wght@300;400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet" />
 </head>
 <body>
 
-  <header>
-    <nav>
+  <header class="site-header">
+    <nav class="nav">
       <a href="#" class="logo">THIERRY STRAVERS</a>
-      <ul>
+      <button class="nav-toggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links">
         <li><a href="#fragrances">Fragrances</a></li>
         <li><a href="#about">Maison</a></li>
         <li><a href="#contact">Contact</a></li>
@@ -24,23 +27,30 @@
 
   <section class="hero">
     <img class="hero-bg" src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1920&q=80" alt="" />
+    <div class="hero-overlay"></div>
     <div class="hero-content">
-      <p class="hero-subtitle">Paris · Est. 2018</p>
-      <h1>The Art of<br /><em>Rare Perfumery</em></h1>
-      <p class="hero-desc">Each fragrance is a story told through the finest raw ingredients, composed for those who seek the extraordinary.</p>
-      <a href="#fragrances" class="btn">Discover the Collection</a>
+      <p class="hero-subtitle hero-anim-1">Paris · Est. 2018</p>
+      <h1 class="hero-anim-2">The Art of<br /><em>Rare Perfumery</em></h1>
+      <p class="hero-desc hero-anim-3">Each fragrance is a story told through the finest raw ingredients, composed for those who seek the extraordinary.</p>
+      <a href="#fragrances" class="btn hero-anim-4">Discover the Collection</a>
+    </div>
+    <div class="hero-scroll-indicator">
+      <span></span>
     </div>
   </section>
 
   <section id="fragrances" class="fragrances">
-    <div class="section-header">
+    <div class="section-header animate">
       <span class="label">Collection</span>
       <h2>Signature Fragrances</h2>
     </div>
-    <div class="grid">
+    <div class="grid stagger-children">
 
-      <article class="card">
-        <div class="card-img"><img src="https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=800&q=80" alt="Ambre Sauvage" /></div>
+      <article class="card animate">
+        <div class="card-img">
+          <img src="https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=800&q=80" alt="Ambre Sauvage" />
+          <div class="card-img-overlay"></div>
+        </div>
         <div class="card-body">
           <h3>Ambre Sauvage</h3>
           <p class="notes">Labdanum · Oud · Vanilla · Sandalwood</p>
@@ -49,8 +59,11 @@
         </div>
       </article>
 
-      <article class="card">
-        <div class="card-img"><img src="https://images.unsplash.com/photo-1444044205806-38f3ed106c10?auto=format&fit=crop&w=800&q=80" alt="Brume de Mer" /></div>
+      <article class="card animate">
+        <div class="card-img">
+          <img src="https://images.unsplash.com/photo-1444044205806-38f3ed106c10?auto=format&fit=crop&w=800&q=80" alt="Brume de Mer" />
+          <div class="card-img-overlay"></div>
+        </div>
         <div class="card-body">
           <h3>Brume de Mer</h3>
           <p class="notes">Sea Salt · Iris · Vetiver · Musk</p>
@@ -59,8 +72,11 @@
         </div>
       </article>
 
-      <article class="card">
-        <div class="card-img"><img src="https://images.unsplash.com/photo-1462275646964-a0e3386b89fa?auto=format&fit=crop&w=800&q=80" alt="Rose Eternelle" /></div>
+      <article class="card animate">
+        <div class="card-img">
+          <img src="https://images.unsplash.com/photo-1462275646964-a0e3386b89fa?auto=format&fit=crop&w=800&q=80" alt="Rose Eternelle" />
+          <div class="card-img-overlay"></div>
+        </div>
         <div class="card-body">
           <h3>Rose Eternelle</h3>
           <p class="notes">Damask Rose · Patchouli · Benzoin · Musk</p>
@@ -69,8 +85,11 @@
         </div>
       </article>
 
-      <article class="card">
-        <div class="card-img"><img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80" alt="Forêt Noire" /></div>
+      <article class="card animate">
+        <div class="card-img">
+          <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80" alt="Forêt Noire" />
+          <div class="card-img-overlay"></div>
+        </div>
         <div class="card-body">
           <h3>Forêt Noire</h3>
           <p class="notes">Cedarwood · Black Pepper · Leather · Oakmoss</p>
@@ -79,8 +98,11 @@
         </div>
       </article>
 
-      <article class="card">
-        <div class="card-img"><img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=800&q=80" alt="Lumière Dorée" /></div>
+      <article class="card animate">
+        <div class="card-img">
+          <img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=800&q=80" alt="Lumière Dorée" />
+          <div class="card-img-overlay"></div>
+        </div>
         <div class="card-body">
           <h3>Lumière Dorée</h3>
           <p class="notes">Neroli · Bergamot · Jasmine · White Musk</p>
@@ -89,8 +111,11 @@
         </div>
       </article>
 
-      <article class="card">
-        <div class="card-img"><img src="https://images.unsplash.com/photo-1532274402911-5a369e4c4bb5?auto=format&fit=crop&w=800&q=80" alt="Nuit Infinie" /></div>
+      <article class="card animate">
+        <div class="card-img">
+          <img src="https://images.unsplash.com/photo-1532274402911-5a369e4c4bb5?auto=format&fit=crop&w=800&q=80" alt="Nuit Infinie" />
+          <div class="card-img-overlay"></div>
+        </div>
         <div class="card-body">
           <h3>Nuit Infinie</h3>
           <p class="notes">Violet · Incense · Ambergris · Dark Musk</p>
@@ -104,33 +129,45 @@
 
   <section id="about" class="about">
     <div class="about-inner">
-      <div class="about-text">
+      <div class="about-text animate">
         <span class="label">Maison Thierry Stravers</span>
         <h2>Perfumery as Poetry</h2>
         <p>Founded in Paris in 2018, Thierry Stravers began as a singular obsession: to compose fragrances that transcend trend and speak directly to emotion.</p>
         <p>Every bottle in our collection is the result of months — sometimes years — of sourcing, testing, and refining. We work exclusively with natural and sustainably harvested raw materials, partnering with growers across Morocco, India, Madagascar, and Provence.</p>
         <p>Our perfumes are not worn. They are inhabited.</p>
       </div>
-      <div class="about-visual">
-        <div class="about-accent"></div>
+      <div class="about-stats animate">
+        <div class="stat">
+          <span class="stat-number">6</span>
+          <span class="stat-label">Signature Scents</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">14</span>
+          <span class="stat-label">Countries Sourced</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">7</span>
+          <span class="stat-label">Years of Craft</span>
+        </div>
       </div>
     </div>
   </section>
 
   <section class="quote">
-    <blockquote>
-      "A perfume is a memory<br />before the moment has happened."
+    <blockquote class="animate">
+      <span class="quote-mark">"</span>
+      A perfume is a memory<br />before the moment has happened.
       <cite>— Thierry Stravers</cite>
     </blockquote>
   </section>
 
   <section id="contact" class="contact">
-    <div class="section-header">
+    <div class="section-header animate">
       <span class="label">Bespoke &amp; Enquiries</span>
       <h2>Get in Touch</h2>
     </div>
     <div class="contact-inner">
-      <div class="contact-info">
+      <div class="contact-info animate">
         <div class="contact-item">
           <h4>Atelier</h4>
           <p>12 Rue du Faubourg Saint-Honoré<br />75008 Paris, France</p>
@@ -144,20 +181,37 @@
           <p>contact@thierrystravers.com</p>
         </div>
       </div>
-      <form class="contact-form">
-        <input type="text" placeholder="Your name" required />
-        <input type="email" placeholder="Your email" required />
-        <textarea placeholder="Your message" rows="5" required></textarea>
+      <form class="contact-form animate">
+        <div class="form-group">
+          <input type="text" id="name" placeholder=" " required />
+          <label for="name">Your name</label>
+        </div>
+        <div class="form-group">
+          <input type="email" id="email" placeholder=" " required />
+          <label for="email">Your email</label>
+        </div>
+        <div class="form-group">
+          <textarea id="message" placeholder=" " rows="5" required></textarea>
+          <label for="message">Your message</label>
+        </div>
         <button type="submit" class="btn">Send Message</button>
       </form>
     </div>
   </section>
 
   <footer>
-    <p class="logo">THIERRY STRAVERS</p>
-    <p class="tagline">Rare Perfumery · Paris</p>
-    <p class="copy">&copy; 2026 Thierry Stravers. All rights reserved.</p>
+    <div class="footer-inner">
+      <p class="logo">THIERRY STRAVERS</p>
+      <p class="tagline">Rare Perfumery · Paris</p>
+      <div class="footer-links">
+        <a href="#fragrances">Fragrances</a>
+        <a href="#about">Maison</a>
+        <a href="#contact">Contact</a>
+      </div>
+      <p class="copy">&copy; 2026 Thierry Stravers. All rights reserved.</p>
+    </div>
   </footer>
 
+  <script src="main.js"></script>
 </body>
 </html>
